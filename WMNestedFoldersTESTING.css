@@ -1,0 +1,89 @@
+/* ==========
+ * TESTING
+ * Nested Folders in Squarespace
+ * Copyright Will-Myers.com
+========== */
+
+/*#header {
+  --mobile-nested-item-font-size: 1rem;
+  --mobile-nested-folder-padding-bottom: 1rem;
+  --mobile-nested-folder-padding-top: 0.5rem;
+  --mobile-nested-folder-icon-transform: rotate(45deg);
+  --folder-border-thickness: 0px;
+  --folder-border-style: solid;
+  --folder-border-color: currentColor:
+  --folder-shadow: 2px 2px 5px hsla(0, 0%, 0%, 0.25)
+}*/
+
+#header .header-nav .nested-folder.header-nav-folder-content {
+  position: absolute;
+  left: calc(100%);
+  top: calc(-0.5em - var(--folder-border-thickness, 0px));
+  padding: 0.5em 0em;
+  display: none;
+  box-sizing: border-box;
+}
+#header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
+#header .header-nav .header-nav-item--nested-folder.focus .nested-folder{
+  display:block;
+  opacity: 1;
+}
+
+#header .header-layout-nav-right .header-nav .header-nav-item--folder .nested-folder.header-nav-folder-content {
+  left: 100%;
+}
+#header .header-nav .header-nav-item--folder.folder-side--flipped .nested-folder.header-nav-folder-content {
+  right: 100%;
+  left: initial;
+}
+
+#header  .header-nav .header-nav-item--nested-folder{
+  position: relative;
+}
+
+/*All Desktop Folders*/
+#header .header-nav-folder-content {
+  padding: 0.5em 0em;
+  box-shadow: var(--folder-shadow, initial);
+  border: var(--folder-border-thickness, 0px) var(--folder-border-style, solid) var(--folder-border-color, currentColor);
+}
+/*All Desktop Folder Items*/
+#header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item{
+  padding: 0 1em;
+}
+
+/*Mobile Folder*/
+.header-menu-nav-item--accordion-folder {
+  overflow: hidden; /* Ensure content doesn't overflow */
+}
+.header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-menu-nav-item--accordion-folder > a .icon {
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s ease;
+}
+.header-menu-nav-item--accordion-folder > a.open .icon {
+  transform: var(--mobile-nested-folder-icon-transform, rotate(45deg));
+}
+.header-menu-nav-item--accordion-folder.header-menu-nav-item a {
+  transition: background-color 0.3s ease; 
+}
+
+.header-menu-nav-item--accordion-folder .accordion-folder-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease; 
+}
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper{
+  padding-bottom: var(--mobile-nested-folder-padding-bottom, 1rem);
+  padding-top: var(--mobile-nested-folder-padding-top, 0.5rem);
+}
+
+/*Mobile Nested Folder Items*/
+.accordion-folder-content .header-menu-nav-item a {
+  font-size: var(--mobile-nested-item-font-size, 8.5vmin);
+}
