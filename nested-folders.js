@@ -1,35 +1,7 @@
 /**
-* Testing
 * Nested Folders
 * Copyright Will-Myers.com
 */
-
-/*this.nestedFolders = {
-  "Wander Events": {
-    trigger: el,
-    mobileTrigger: mobileEl,
-    folder: folder,
-    links: [{
-      el: link,
-      mobileEl: mobileEl,
-      parent: link.parent,
-      text: 'Event 1',
-      href: '/events-1'
-    }, {
-      el: link,
-      mobileEl: mobileEl,
-      parent: link.parent,
-      text: 'Event 2',
-      href: '/events-2'
-    }, {
-      el: link,
-      mobileEl: mobileEl,
-      parent: link.parent,
-      text: 'Event 3',
-      href: '/events-3'
-    }]
-  },
-}*/
 
 class NestedFolders {
   constructor() {
