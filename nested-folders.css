@@ -2,6 +2,18 @@
  * Nested Folders in Squarespace
  * Copyright Will-Myers.com
 ========== */
+
+/*#header {
+  --mobile-nested-item-font-size: 1rem;
+  --mobile-nested-folder-padding-bottom: 1rem;
+  --mobile-nested-folder-padding-top: 0.5rem;
+  --mobile-nested-folder-icon-transform: rotate(45deg);
+  --folder-border-thickness: 0px;
+  --folder-border-style: solid;
+  --folder-border-color: currentColor:
+  --folder-shadow: 2px 2px 5px hsla(0, 0%, 0%, 0.25)
+}*/
+
 #header .header-nav .nested-folder.header-nav-folder-content {
   position: absolute;
   left: calc(100%);
@@ -32,7 +44,9 @@
 #header .header-nav-folder-content {
   padding: 0.5em 0em;
   box-shadow: var(--folder-shadow, initial);
-  border: var(--folder-border-thickness, 0px) var(--folder-border-style, solid) var(--folder-border-color, currentColor);
+  border: var(--folder-border-thickness, 0px) 
+    var(--folder-border-style, solid) 
+    var(--folder-border-color, var(--navigationLinkColor, currentColor));
 }
 /*All Desktop Folder Items*/
 #header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item{
@@ -45,7 +59,8 @@
 }
 .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
   display: flex;
-  justify-content: space-between;
+  gap: var(--mobile-nested-folder-gap, 8px);
+  justify-content: var(--mobile-nested-folder-alignment, space-between);
   align-items: center;
 }
 .header-menu-nav-item--accordion-folder > a .icon {
