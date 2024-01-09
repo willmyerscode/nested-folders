@@ -10,8 +10,13 @@
   --mobile-nested-folder-icon-transform: rotate(45deg);
   --folder-border-thickness: 0px;
   --folder-border-style: solid;
-  --folder-border-color: currentColor:
-  --folder-shadow: 2px 2px 5px hsla(0, 0%, 0%, 0.25)
+  --folder-border-color: currentColor;
+
+  --folder-shadow-offset-x: 2px;
+  --folder-shadow-offset-y: 2px;
+  --folder-shadow-blur: 5px;
+  --folder-shadow-opacity: 0%;
+  --mobile-nested-item-size: -1vmin;
 }*/
 
 #header .header-nav .nested-folder.header-nav-folder-content {
@@ -43,10 +48,16 @@
 /*All Desktop Folders*/
 #header .header-nav-folder-content {
   padding: 0.5em 0em;
-  box-shadow: var(--folder-shadow, initial);
+  box-shadow: var(--folder-shadow-offset-x, 0px) 
+    var(--folder-shadow-offset-y, 0px)
+    var(--folder-shadow-blur, 0px)
+    var(--folder-shadow-spread, 0px)
+    hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%))
+  ;
   border: var(--folder-border-thickness, 0px) 
     var(--folder-border-style, solid) 
-    var(--folder-border-color, var(--navigationLinkColor, currentColor));
+    var(--folder-border-color, var(--navigationLinkColor, currentColor))
+  ;
 }
 /*All Desktop Folder Items*/
 #header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item{
@@ -86,6 +97,18 @@
 }
 
 /*Mobile Nested Folder Items*/
+@media screen and (min-width: 768px) {
+  .accordion-folder-content .header-menu-nav-item a {
+    font-size: 6vmin;
+    font-size: calc(6vmin + var(--mobile-nested-item-size, -1vmin));
+  }
+}
+@media screen and (min-width: 576px) {
+  .accordion-folder-content .header-menu-nav-item a {
+    font-size: 6.6vmin;
+    font-size: calc(6.6vmin + var(--mobile-nested-item-size, -1vmin));
+  }
+}
 .accordion-folder-content .header-menu-nav-item a {
-  font-size: var(--mobile-nested-item-font-size, 8.5vmin);
+    font-size: calc(8.5vmin + var(--mobile-nested-item-size, -1vmin));
 }
