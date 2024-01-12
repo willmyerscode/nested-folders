@@ -1,8 +1,3 @@
-/**
-* Nested Folders
-* Copyright Will-Myers.com
-*/
-
 class NestedFolders {
   constructor(settings) {
     this.headerFolderItems = document.querySelectorAll('.header-display-desktop .header-nav-folder-content a');
@@ -14,10 +9,12 @@ class NestedFolders {
   }
 
   init() {
+    console.log(this.nestedFolders)
     this.getNestedItems();
     this.buildNestedFolders();
     this.addAccordionClickEvent();
     this.addAccessibility();
+    //this.setDesktopFolderClickthrough();
     
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
@@ -130,6 +127,7 @@ class NestedFolders {
       /*Should DesktopFolder Clickthrough?*/
       if (nestedFolderShouldClickthrough) {
         let newUrl = data.links[0].href;
+        console.log(newUrl)
         trigger.setAttribute('href', newUrl)
       } else {
         trigger.setAttribute('rel', 'nofollow');

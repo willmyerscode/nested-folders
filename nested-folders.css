@@ -1,22 +1,19 @@
-/* ==========
- * Nested Folders in Squarespace
- * Copyright Will-Myers.com
-========== */
-
 /*#header {
-  --mobile-nested-item-font-size: 1rem;
-  --mobile-nested-folder-padding-bottom: 1rem;
-  --mobile-nested-folder-padding-top: 0.5rem;
-  --mobile-nested-folder-icon-transform: rotate(45deg);
-  --folder-border-thickness: 0px;
+  --folder-border-thickness: 1px;
   --folder-border-style: solid;
   --folder-border-color: currentColor;
 
   --folder-shadow-offset-x: 2px;
   --folder-shadow-offset-y: 2px;
   --folder-shadow-blur: 5px;
-  --folder-shadow-opacity: 0%;
+  --folder-shadow-opacity: 0.25;
+
   --mobile-nested-item-size: -1vmin;
+  --mobile-nested-folder-padding-bottom: 1rem;
+  --mobile-nested-folder-padding-top: 0.5rem;
+  --mobile-nested-item-spacing: 2vw;
+  --mobile-nested-folder-icon-transform: rotate(45deg);
+  --mobile-nested-folder-icon-size: 25px;
 }*/
 
 #header .header-nav .nested-folder.header-nav-folder-content {
@@ -54,7 +51,7 @@
     var(--folder-shadow-spread, 0px)
     hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%))
   ;
-  border: var(--folder-border-thickness, 0px) 
+  border: var(--folder-border-thickness, 1px) 
     var(--folder-border-style, solid) 
     var(--folder-border-color, var(--navigationLinkColor, currentColor))
   ;
@@ -74,10 +71,44 @@
   justify-content: var(--mobile-nested-folder-alignment, space-between);
   align-items: center;
 }
+/*Mobile Alignment -- RIGHT*/
+.header-overlay-alignment-right .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
+  justify-content: var(--mobile-nested-folder-alignment, end);
+}
+.header-overlay-alignment-right .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: calc(var(--mobile-nested-folder-icon-size, 25px) + var(--mobile-nested-folder-gap, 8px) + var(--mobile-nested-item-inset, 12px));
+}
+
+
+/*Mobile Alignment -- CENTER*/
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
+  justify-content: var(--mobile-nested-folder-alignment, center);
+}
+.header-overlay-alignment-center .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: 2vw;
+  padding-left: 2vw;
+}
+
+/*Mobile Alignment -- LEFT*/
+.header-overlay-alignment-left .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
+  justify-content: var(--mobile-nested-folder-alignment, space-between);
+}
+.header-overlay-alignment-left .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-left: var(--mobile-nested-item-inset, 12px);
+}
+
+
+
 .header-menu-nav-item--accordion-folder > a .icon {
   display: grid;
   place-items: center;
   transition: transform 0.3s ease;
+  width: var(--mobile-nested-folder-icon-size, 25px);
+  height: var(--mobile-nested-folder-icon-size, 25px);
+}
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder > a .icon {
+  position:absolute;
+  right: 0;
 }
 .header-menu-nav-item--accordion-folder > a.open .icon {
   transform: var(--mobile-nested-folder-icon-transform, rotate(45deg));
@@ -95,13 +126,20 @@
   padding-bottom: var(--mobile-nested-folder-padding-bottom, 1rem);
   padding-top: var(--mobile-nested-folder-padding-top, 0.5rem);
 }
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item a{
+  margin-top: var(--mobile-nested-item-spacing, 2vw);
+  margin-bottom: var(--mobile-nested-item-spacing, 2vw);
+}
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:first-child a{
+  margin-top: 0px;
+}
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:last-child a{
+  margin-bottom: 0px;
+}
 
 /*Mobile Nested Folder Items*/
-@media screen and (min-width: 768px) {
-  .accordion-folder-content .header-menu-nav-item a {
-    font-size: 6vmin;
-    font-size: calc(6vmin + var(--mobile-nested-item-size, -1vmin));
-  }
+.accordion-folder-content .header-menu-nav-item a {
+  font-size: calc(8.5vmin + var(--mobile-nested-item-size, -1vmin));
 }
 @media screen and (min-width: 576px) {
   .accordion-folder-content .header-menu-nav-item a {
@@ -109,6 +147,10 @@
     font-size: calc(6.6vmin + var(--mobile-nested-item-size, -1vmin));
   }
 }
-.accordion-folder-content .header-menu-nav-item a {
-    font-size: calc(8.5vmin + var(--mobile-nested-item-size, -1vmin));
+@media screen and (min-width: 768px) {
+  .accordion-folder-content .header-menu-nav-item a {
+    font-size: 6vmin;
+    font-size: calc(6vmin + var(--mobile-nested-item-size, -1vmin));
+  }
 }
+
