@@ -19,7 +19,7 @@
 #header .header-nav .nested-folder.header-nav-folder-content {
   position: absolute;
   left: calc(100%);
-  top: calc(-0.5em - var(--folder-border-thickness, 0px));
+  top: calc(-0.5em - var(--folder-border-thickness, 1px));
   padding: 0.5em 0em;
   display: none;
   box-sizing: border-box;
@@ -51,7 +51,7 @@
     var(--folder-shadow-spread, 0px)
     hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%))
   ;
-  border: var(--folder-border-thickness, 1px) 
+  border: var(--folder-border-thickness, 5px) 
     var(--folder-border-style, solid) 
     var(--folder-border-color, var(--navigationLinkColor, currentColor))
   ;
