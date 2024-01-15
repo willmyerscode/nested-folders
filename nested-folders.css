@@ -45,8 +45,8 @@
 /*All Desktop Folders*/
 #header .header-nav-folder-content {
   padding: 0.5em 0em;
-  box-shadow: var(--folder-shadow-offset-x, 0px) 
-    var(--folder-shadow-offset-y, 0px)
+  box-shadow: var(--folder-shadow-offset-x, 2px) 
+    var(--folder-shadow-offset-y, 2px)
     var(--folder-shadow-blur, 0px)
     var(--folder-shadow-spread, 0px)
     hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%))
