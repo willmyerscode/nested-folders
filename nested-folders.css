@@ -21,15 +21,21 @@
   left: calc(100%);
   top: calc(-0.5em - var(--folder-border-thickness, 1px));
   padding: 0.5em 0em;
-  display: none;
+  /* display: none; */
   box-sizing: border-box;
+  visibility: hidden;
+  opacity:0;
 }
 #header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
 #header .header-nav .header-nav-item--nested-folder.focus .nested-folder{
-  display:block;
+  /* display:block; */
   opacity: 1;
+  visibility: visible;
 }
+#header  .header-nav .header-nav-item--nested-folder{
+  position: relative;
 
+}
 #header .header-layout-nav-right .header-nav .header-nav-item--folder .nested-folder.header-nav-folder-content {
   left: 100%;
 }
@@ -38,9 +44,27 @@
   left: initial;
 }
 
-#header  .header-nav .header-nav-item--nested-folder{
+/** Add Indicator CSS **/
+/* #header  .header-nav .header-nav-item--nested-folder{
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+.header-nav-item--nested-folder:after {
+  content: var(--nested-folder-indicator, '\25B6');
+  position: relative;
+  line-height: 0;
+  font-size: var(--nested-folder-indicator-size, 0.8em);
+  padding-left: 8px;
+}
+#header  .header-nav .folder-side--flipped .header-nav-item--nested-folder{
+  flex-direction: row-reverse;
+}
+.folder-side--flipped .header-nav-item--nested-folder:after {
+  transform: rotate(180deg);
+} */
+
 
 /*All Desktop Folders*/
 #header .header-nav-folder-content {
@@ -56,6 +80,9 @@
     var(--folder-border-color, var(--navigationLinkColor, currentColor))
   ;
 }
+
+
+
 /*All Desktop Folder Items*/
 #header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item{
   padding: 0 1em;
@@ -96,8 +123,6 @@
 .header-overlay-alignment-left .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
   padding-left: var(--mobile-nested-item-inset, 12px);
 }
-
-
 
 .header-menu-nav-item--accordion-folder > a .icon {
   display: grid;
@@ -153,4 +178,3 @@
     font-size: calc(6vmin + var(--mobile-nested-item-size, -1vmin));
   }
 }
-

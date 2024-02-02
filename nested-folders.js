@@ -9,18 +9,15 @@ class NestedFolders {
   }
 
   init() {
-    console.log(this.nestedFolders)
     this.getNestedItems();
     this.buildNestedFolders();
     this.addAccordionClickEvent();
     this.addAccessibility();
-    //this.setDesktopFolderClickthrough();
     
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      let trigger = data.trigger;
-      let triggerParent = 
-      trigger.addEventListener('mouseenter', () => {
+      console.log(data)
+      data.parentFolder.addEventListener('mouseenter', () => {
         this.checkFolderPositions()
       })
     }
@@ -28,18 +25,21 @@ class NestedFolders {
   }
 
   checkFolderPositions() {
+    const isOver = false;
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
       let windowWidth = window.innerWidth;
       let folderRight = data.folder.getBoundingClientRect().right;
       if (windowWidth < folderRight) {
         data.folder.closest('.header-nav-item--folder').classList.add('folder-side--flipped')
+        break;
+      } else {
+        data.folder.closest('.header-nav-item--folder').classList.remove('folder-side--flipped')
       }
     }
   }
 
   getNestedItems() {
-    
     this.headerFolderItems.forEach(item => {
       let itemHref = item.getAttribute('href');
     
@@ -50,6 +50,7 @@ class NestedFolders {
           let titleText = title.textContent.trim();
           let folderItems = title.nextElementSibling.querySelectorAll('.header-nav-folder-item a');
           let parentFolder = item.closest('.header-nav-item--folder');
+          parentFolder.classList.add('wm-nested-dropdown');
           this.nestedFolders[titleText] = {
             trigger: item, // The DOM element for the folder title
             parentFolder: parentFolder,
@@ -132,7 +133,7 @@ class NestedFolders {
       } else {
         trigger.setAttribute('rel', 'nofollow');
         trigger.addEventListener('click', (e) => {
-          e.stopPropagation();
+          //e.stopPropagation();
           e.preventDefault();
         })
       }
@@ -143,7 +144,7 @@ class NestedFolders {
       let item = this.nestedFolders[id];
       let mobileTrigger = item.mobileTrigger;
       mobileTrigger.addEventListener("click", function(e) {
-        e.stopPropagation();
+        //e.stopPropagation();
         e.preventDefault();
         const content = this.nextElementSibling;
     
@@ -167,6 +168,21 @@ class NestedFolders {
         desktopFolder.classList.add('focus')
       } 
     }, true); 
+
+    /* Remove Focus from all inner anchor links and from folder if you hover out of a folder */
+    document.querySelectorAll('.header-nav-folder-content').forEach(folder => {
+      folder.addEventListener('mouseleave', (e) =>{
+        e.target.querySelectorAll('a').forEach(a => a.blur())
+        document.querySelectorAll('.header-nav-item--nested-folder.focus').forEach(el => el.classList.remove('focus'));
+      })
+    })
+
+    /* Remove Focus class from items when you mouseenter a new item*/
+    for (const item in this.nestedFolders) {
+      this.nestedFolders[item].trigger?.addEventListener('mouseenter', () => {
+        document.querySelectorAll('.header-nav-item--nested-folder.focus').forEach(el => el.classList.remove('focus'));
+      });
+    }
   }
 }
 
