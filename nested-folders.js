@@ -16,12 +16,10 @@ class NestedFolders {
     
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      // console.log(data)
       data.parentFolder.addEventListener('mouseenter', () => {
         this.checkFolderPositions()
       })
     }
-    document.body.classList.add('wm-nested-folders-loaded')
   }
 
   checkFolderPositions() {
@@ -128,7 +126,6 @@ class NestedFolders {
       /*Should DesktopFolder Clickthrough?*/
       if (nestedFolderShouldClickthrough) {
         let newUrl = data.links[0].href;
-        console.log(newUrl)
         trigger.setAttribute('href', newUrl)
       } else {
         trigger.setAttribute('rel', 'nofollow');
@@ -229,4 +226,6 @@ class NestedFolders {
   };
   const mergedSettings = deepMerge({}, settings, userSettings);
   const wmNestedFolders = new NestedFolders(mergedSettings);
+  document.body.classList.add('wm-nested-folders-loaded')
 }())
+
