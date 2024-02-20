@@ -16,7 +16,7 @@ class NestedFolders {
     
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      console.log(data)
+      // console.log(data)
       data.parentFolder.addEventListener('mouseenter', () => {
         this.checkFolderPositions()
       })
