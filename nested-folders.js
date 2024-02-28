@@ -1,4 +1,18 @@
 class NestedFolders {
+  static emitEvent(type, detail = {}, elem = document) {
+    // Make sure there's an event type
+    if (!type) return;
+
+    // Create a new event
+    let event = new CustomEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      detail: detail,
+    });
+
+    // Dispatch the event
+    return elem.dispatchEvent(event);
+  };
   constructor(settings) {
     this.headerFolderItems = document.querySelectorAll('.header-display-desktop .header-nav-folder-content a');
     this.headerFoldersTitles = document.querySelectorAll('.header-display-desktop .header-nav-folder-title');
@@ -13,13 +27,40 @@ class NestedFolders {
     this.buildNestedFolders();
     this.addAccordionClickEvent();
     this.addAccessibility();
+    this.addPluginLoadEvent();
     
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
       data.parentFolder.addEventListener('mouseenter', () => {
         this.checkFolderPositions()
-      })
+      });
     }
+    NestedFolders.emitEvent('wmNestedFolders:loaded');
+    
+  }
+
+  addPluginLoadEvent() {
+    const handlePluginLoad = () => {
+      this.setActiveNavItem();
+      
+
+      // if (this.settings.reformatHeaderLinks) {
+      //   const links = document.querySelectorAll('#header .header-menu-nav-folder-content a, #header .header-nav a');
+      //   links.forEach(link => {
+      //     const desktopLink = link.closest('.header-nav'); 
+      //     if (desktopLink && !link.querySelector('.header-nav-folder-item-content') && !link.matches('.header-nav-item > a')) {
+      //       //link.innerHTML = `<span class="header-nav-folder-item-content">${link.innerHTML}</span>`
+      //     }
+
+      //     const mobileLink = link.closest('[data-folder]');
+      //     if (mobileLink) {
+      //       //link.innerHTML = `<div class="header-menu-nav-item-content">${link.innerHTML}</div>`
+      //     }
+      //   })
+      // }
+    }
+
+    document.addEventListener('wmNestedFolders:loaded', handlePluginLoad);
   }
 
   checkFolderPositions() {
@@ -57,12 +98,58 @@ class NestedFolders {
               el: folderItem,
               mobileEl: document.querySelector(`.header-menu-nav-list [data-folder="${titleHref}"] [href="${folderItem.getAttribute('href')}"]`),
               text: folderItem.textContent.trim(),
+              html: folderItem.innerHTML,
+              mobileHTML: document.querySelector(`.header-menu-nav-list [data-folder="${titleHref}"] [href="${folderItem.getAttribute('href')}"]`).innerHTML,
               href: folderItem.getAttribute('href')
             }))
           };
         }
       });
     })
+  }
+
+  setActiveNavItem() {
+    const links = document.querySelectorAll('#header .header-menu-nav-folder-content a, #header .header-nav a');
+
+    links.forEach(link => {
+      if (window.location.pathname === link.getAttribute('href')) {
+        console.log(link)
+
+        /* Desktop Nav Folder Level 1 */
+        const desktopNestedFolderItem = link.closest('.wm-nested-dropdown');
+        if (desktopNestedFolderItem) {
+          desktopNestedFolderItem.classList.add('header-nav-item--active');
+        }
+
+        /* Desktop Nav Folder Level 2 */
+        const desktopNestedFolder = link.closest('.header-nav-item--nested-folder');
+        if (desktopNestedFolder) {
+          desktopNestedFolder.classList.add('header-nested-nav-folder-item--active');
+        }
+
+        /* Desktop Nav Folder Level 3 */
+        const desktopNestedLink = link.closest('.nested-folder .header-nav-folder-item');
+        if (desktopNestedLink) {
+          desktopNestedLink.classList.add('header-nav-folder-item--active');
+        }
+
+        /* Mobile Nav Item */
+        const headerMenuNavItem = link.closest('.header-menu-nav-item');
+        if (headerMenuNavItem) {
+          headerMenuNavItem.classList.add('header-menu-nav-item--active');
+        }
+
+        /* Mobile Nav Folder */
+        const mobileLink = link.closest('[data-folder]');
+          if (mobileLink) {
+            const href = mobileLink.dataset.folder;
+            const link = document.querySelector(`.header-menu-nav-item [data-folder-id="${href}"]`)
+            link.parentElement.classList.add('header-menu-nav-item--active')
+          }
+
+        link.setAttribute('aria-current', 'page')
+      }
+    });
   }
 
   buildNestedFolders() {      
@@ -95,7 +182,7 @@ class NestedFolders {
         let link = data.links[i];
       
         desktopFolderToRemove = link.el.closest('.header-nav-item--folder');
-        link.el.innerText = link.text;
+        link.el.innerHTML = '<span class="header-nav-folder-item-content">' + link.html + '</span>';
         // Skip the first link if nestedFolderShouldClickthrough is true
         if (!(nestedFolderShouldClickthrough && i === 0)) {
           nestedFolder.append(link.el.parentElement);
@@ -223,6 +310,7 @@ class NestedFolders {
     mobileIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>`,
     mobileCategoryPrepend: '',
     mobileCategoryAppend: '',
+    reformatHeaderLinks: false
   };
   const mergedSettings = deepMerge({}, settings, userSettings);
   const wmNestedFolders = new NestedFolders(mergedSettings);
