@@ -113,8 +113,6 @@ class NestedFolders {
 
     links.forEach(link => {
       if (window.location.pathname === link.getAttribute('href')) {
-        console.log(link)
-
         /* Desktop Nav Folder Level 1 */
         const desktopNestedFolderItem = link.closest('.wm-nested-dropdown');
         if (desktopNestedFolderItem) {
