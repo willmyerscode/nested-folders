@@ -21,7 +21,10 @@
   left: calc(100%);
   top: calc(-0.5em - var(--folder-border-thickness, 1px));
   padding: 0.5em 0em;
-  /* display: none; */
+  white-space: initial;
+  min-width: var(--nested-folder-min-width, 200px);
+  max-width: var(--nested-folder-max-width, initial);
+  width: 100%;
   box-sizing: border-box;
   visibility: hidden;
   opacity:0;
