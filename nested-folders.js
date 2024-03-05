@@ -18,6 +18,7 @@ class NestedFolders {
     this.headerFoldersTitles = document.querySelectorAll('.header-display-desktop .header-nav-folder-title');
     this.mobileLinks = document.querySelectorAll('.header-menu-nav-list a');
     this.nestedFolders = {};
+    this.header = document.querySelector('#header');
     this.settings = settings
     this.init();
   }
@@ -36,28 +37,11 @@ class NestedFolders {
       });
     }
     NestedFolders.emitEvent('wmNestedFolders:loaded');
-    
   }
 
   addPluginLoadEvent() {
     const handlePluginLoad = () => {
       this.setActiveNavItem();
-      
-
-      // if (this.settings.reformatHeaderLinks) {
-      //   const links = document.querySelectorAll('#header .header-menu-nav-folder-content a, #header .header-nav a');
-      //   links.forEach(link => {
-      //     const desktopLink = link.closest('.header-nav'); 
-      //     if (desktopLink && !link.querySelector('.header-nav-folder-item-content') && !link.matches('.header-nav-item > a')) {
-      //       //link.innerHTML = `<span class="header-nav-folder-item-content">${link.innerHTML}</span>`
-      //     }
-
-      //     const mobileLink = link.closest('[data-folder]');
-      //     if (mobileLink) {
-      //       //link.innerHTML = `<div class="header-menu-nav-item-content">${link.innerHTML}</div>`
-      //     }
-      //   })
-      // }
     }
 
     document.addEventListener('wmNestedFolders:loaded', handlePluginLoad);
@@ -68,12 +52,25 @@ class NestedFolders {
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
       let windowWidth = window.innerWidth;
+      let rightEdge = window.innerWidth - (window.innerWidth * 0.03)
       let folderRight = data.folder.getBoundingClientRect().right;
-      if (windowWidth < folderRight) {
+      
+      if (rightEdge < folderRight) { // If Folder is off the right edge
         data.folder.closest('.header-nav-item--folder').classList.add('folder-side--flipped')
+
+        let folderLeft = data.folder.getBoundingClientRect().left;
+        let leftEdge = (window.innerWidth * 0.03)
+        if (folderLeft < leftEdge) {
+          const shrinkFolderBy = (window.innerWidth * 0.03) - folderLeft;
+          this.header.style.setProperty('--nested-folder-max-width', shrinkFolderBy + 'px')
+        } else {
+          this.header.style.setProperty('--nested-folder-max-width', 'initial')
+        }
+        
         break;
       } else {
         data.folder.closest('.header-nav-item--folder').classList.remove('folder-side--flipped')
+        this.header.style.setProperty('--nested-folder-max-width', 'initial')
       }
     }
   }
@@ -142,7 +139,7 @@ class NestedFolders {
           if (mobileLink) {
             const href = mobileLink.dataset.folder;
             const link = document.querySelector(`.header-menu-nav-item [data-folder-id="${href}"]`)
-            link.parentElement.classList.add('header-menu-nav-item--active')
+            link?.parentElement.classList.add('header-menu-nav-item--active')
           }
 
         link.setAttribute('aria-current', 'page')
