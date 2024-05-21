@@ -106,7 +106,7 @@ class NestedFolders {
   }
 
   setActiveNavItem() {
-    const links = document.querySelectorAll('#header .header-menu-nav-folder-content a, #header .header-nav a');
+    const links = document.querySelectorAll('#header .header-menu-nav-folder-content a:not([data-action]), #header .header-nav a:not([data-action])');
 
     links.forEach(link => {
       if (window.location.pathname === link.getAttribute('href')) {
@@ -131,6 +131,7 @@ class NestedFolders {
         /* Mobile Nav Item */
         const headerMenuNavItem = link.closest('.header-menu-nav-item');
         if (headerMenuNavItem) {
+          
           headerMenuNavItem.classList.add('header-menu-nav-item--active');
         }
 
@@ -138,8 +139,8 @@ class NestedFolders {
         const mobileLink = link.closest('[data-folder]');
           if (mobileLink) {
             const href = mobileLink.dataset.folder;
-            const link = document.querySelector(`.header-menu-nav-item [data-folder-id="${href}"]`)
-            link?.parentElement.classList.add('header-menu-nav-item--active')
+            const navLink = document.querySelector(`.header-menu-nav-item a[data-folder-id="${href}"]`)
+            navLink?.parentElement.classList.add('header-menu-nav-item--active')
           }
 
         link.setAttribute('aria-current', 'page')
@@ -311,4 +312,3 @@ class NestedFolders {
   const wmNestedFolders = new NestedFolders(mergedSettings);
   document.body.classList.add('wm-nested-folders-loaded')
 }())
-
