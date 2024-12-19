@@ -81,22 +81,28 @@ class NestedFolders {
     
       this.headerFoldersTitles.forEach(title => {
         let titleHref = title.getAttribute('href');
-    
+        
         if(itemHref === titleHref) {
+          const selector = `[data-folder="root"] .header-menu-nav-wrapper [href="${titleHref}"][data-folder-id]`;
+          const mobileEquiv = document.querySelector(selector);
+
           let titleText = title.textContent.trim();
           let folderItems = title.nextElementSibling.querySelectorAll('.header-nav-folder-item a');
           let parentFolder = item.closest('.header-nav-item--folder');
           parentFolder.classList.add('wm-nested-dropdown');
+          const mobileTrigger = document.querySelector(`.header-menu-nav-list a[href="${titleHref}"]:not([data-folder-id])`);
+          
           this.nestedFolders[titleText] = {
             trigger: item, // The DOM element for the folder title
             parentFolder: parentFolder,
-            mobileTrigger: document.querySelector(`.header-menu-nav-list a[href="${titleHref}"]:not([data-folder-id])`),
+            mobileTrigger: mobileTrigger,
             links: Array.from(folderItems).map(folderItem => ({
+              folderId: mobileEquiv.dataset.folderId,
               el: folderItem,
-              mobileEl: document.querySelector(`.header-menu-nav-list [data-folder="${titleHref}"] [href="${folderItem.getAttribute('href')}"]`),
+              mobileEl: document.querySelector(`.header-menu-nav-list [data-folder="${mobileEquiv.dataset.folderId}"] [href="${folderItem.getAttribute('href')}"]`),
               text: folderItem.textContent.trim(),
               html: folderItem.innerHTML,
-              mobileHTML: document.querySelector(`.header-menu-nav-list [data-folder="${titleHref}"] [href="${folderItem.getAttribute('href')}"]`).innerHTML,
+              mobileHTML: document.querySelector(`.header-menu-nav-list [data-folder="${mobileEquiv.dataset.folderId}"] [href="${folderItem.getAttribute('href')}"]`).innerHTML,
               href: folderItem.getAttribute('href')
             }))
           };
@@ -185,7 +191,7 @@ class NestedFolders {
         }
       
         mobileFolderToRemove = link.mobileEl.closest('[data-folder]');
-        mobileFolderTriggerToRemove = document.querySelector(`[data-folder-id="${mobileTrigger.getAttribute('href')}"]`).closest('.container.header-menu-nav-item');
+        mobileFolderTriggerToRemove = document.querySelector(`[data-folder-id="${link.folderId}"]`).closest('.container.header-menu-nav-item');
         mobileAccordionWrapper.append(link.mobileEl.parentElement);
         link.mobileEl.innerHTML = link.text;
       }
