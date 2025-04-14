@@ -137,6 +137,7 @@ class NestedFolders {
 
     links.forEach(link => {
       if (window.location.pathname === link.getAttribute("href")) {
+        console.log("active");
         /* Desktop Nav Folder Level 1 */
         const desktopNestedFolderItem = link.closest(".wm-nested-dropdown");
         if (desktopNestedFolderItem) {
@@ -202,6 +203,7 @@ class NestedFolders {
       let trigger = data.item;
       const linkEl = data.item.querySelector("a");
       let parentFolder = data.parentFolder;
+      parentFolder.classList.add("wm-nested-dropdown");
 
       /*Create Desktop Folder*/
       trigger.classList.add("header-nav-item--nested-folder");
@@ -215,7 +217,7 @@ class NestedFolders {
 
       /*Adding Links To Folders*/
       data.nestedItems.forEach(link => {
-        link.el.innerHTML = '<span class="header-nav-folder-item-content">' + link.el.innerHTML + "</span>";
+        link.el.querySelector('a').innerHTML = '<span class="header-nav-folder-item-content">' + link.el.querySelector('a').innerHTML + "</span>";
         nestedFolder.append(link.el);
       });
 
@@ -288,6 +290,18 @@ class NestedFolders {
   }
 
   addAccessibility() {
+    let isUsingKeyboard = false;
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        isUsingKeyboard = true;
+      }
+    });
+    
+    document.addEventListener('mousedown', () => {
+      isUsingKeyboard = false;
+    });
+    
     document.addEventListener(
       "focus",
       (event) => {
@@ -295,12 +309,12 @@ class NestedFolders {
           let data = this.nestedFolders[item];
           data.item.querySelector("a").setAttribute("aria-expanded", "false");
         }
+        if (!isUsingKeyboard) return;
         let target = event.target;
         let closestFolder = target.closest(".header-nav-item--nested-folder");
         if (closestFolder || target.getAttribute("aria-label") === "nested folder dropdown") {
           closestFolder.querySelector("a").setAttribute("aria-expanded", "true");
         }
-        
       },
       true
     );
