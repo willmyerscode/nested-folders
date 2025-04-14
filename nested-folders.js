@@ -193,12 +193,6 @@ class NestedFolders {
       linkEl.setAttribute("aria-label", "nested folder dropdown");
       linkEl.setAttribute("aria-controls", "nested-folder-" + createFolderText(data.item.textContent.trim()));
       linkEl.setAttribute("aria-expanded", "false");
-      // linkEl.addEventListener("focus", function (e) {
-      //   linkEl.setAttribute("aria-expanded", "true");
-      // });
-      // linkEl.addEventListener("blur", function (e) {
-      //   //linkEl.setAttribute("aria-expanded", "false");
-      // });
 
       let nestedFolder = document.createElement("div");
       nestedFolder.classList.add("nested-folder", "header-nav-folder-content");
@@ -264,6 +258,7 @@ class NestedFolders {
       let mobileTrigger = item.mobileTrigger.querySelector("a");
       let mobileItemsContainer = item.mobileItemsContainer;
       mobileTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
         e.preventDefault();
 
         if (mobileItemsContainer.style.maxHeight) {
