@@ -17,9 +17,11 @@
 }*/
 
 #header .header-nav .nested-folder.header-nav-folder-content {
+  display: none;
+  pointer-events: none;
   position: absolute;
   left: calc(100%);
-  top: calc(-0.5em - var(--folder-border-thickness, 1px));
+  top: calc(-0.5em - (var(--folder-border-thickness, 1px) / 2));
   padding: 0.5em 0em;
   white-space: initial;
   min-width: var(--nested-folder-min-width, 200px);
@@ -30,8 +32,9 @@
   opacity:0;
 }
 #header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
-#header .header-nav .header-nav-item--nested-folder.focus .nested-folder{
-  /* display:block; */
+#header .header-nav .header-nav-item--nested-folder > a[aria-expanded="true"] + .nested-folder{
+  display: block;
+  pointer-events: auto;
   opacity: 1;
   visibility: visible;
 }
@@ -46,28 +49,6 @@
   right: 100%;
   left: initial;
 }
-
-/** Add Indicator CSS **/
-/* #header  .header-nav .header-nav-item--nested-folder{
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.header-nav-item--nested-folder:after {
-  content: var(--nested-folder-indicator, '\25B6');
-  position: relative;
-  line-height: 0;
-  font-size: var(--nested-folder-indicator-size, 0.8em);
-  padding-left: 8px;
-}
-#header  .header-nav .folder-side--flipped .header-nav-item--nested-folder{
-  flex-direction: row-reverse;
-}
-.folder-side--flipped .header-nav-item--nested-folder:after {
-  transform: rotate(180deg);
-} */
-
 
 /*All Desktop Folders*/
 #header .header-nav-folder-content {
@@ -150,6 +131,9 @@
   overflow: hidden;
   transition: max-height 0.3s ease; 
 }
+.nested-folder .hidden-link{
+  display: none;
+}
 .header-menu-nav-item--accordion-folder .accordion-folder-wrapper{
   padding-bottom: var(--mobile-nested-folder-padding-bottom, 1rem);
   padding-top: var(--mobile-nested-folder-padding-top, 0.5rem);
@@ -167,18 +151,16 @@
 
 /*Mobile Nested Folder Items*/
 .accordion-folder-content .header-menu-nav-item a {
-  font-size: calc(8.5vmin + var(--mobile-nested-item-size, -1vmin));
+  font-size: var(--mobile-nested-item-size, 7.5vmin);
 }
 @media screen and (min-width: 576px) {
   .accordion-folder-content .header-menu-nav-item a {
-    font-size: 6.6vmin;
-    font-size: calc(6.6vmin + var(--mobile-nested-item-size, -1vmin));
+    font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 1vmin);
   }
 }
 @media screen and (min-width: 768px) {
   .accordion-folder-content .header-menu-nav-item a {
-    font-size: 6vmin;
-    font-size: calc(6vmin + var(--mobile-nested-item-size, -1vmin));
+    font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 2vmin);
   }
 }
 
