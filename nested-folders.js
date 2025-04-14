@@ -83,7 +83,22 @@ class NestedFolders {
       const nestedFolderContainer = item.previousElementSibling;
       const nestedFolderContainerText = nestedFolderContainer.textContent.trim();
       const nestedFolderContainerLinkEl = nestedFolderContainer.querySelector("a");
-      const mobileNestedFolderContainer = document.querySelector(`.header-menu-nav .container.header-menu-nav-item a[href="${nestedFolderContainerLinkEl.getAttribute("href")}"]`)?.closest(".header-menu-nav-item");
+
+      let mobileNestedFolderContainer = null;
+      const mobileElements = document.querySelectorAll(`.header-menu-nav .container.header-menu-nav-item a[href="${nestedFolderContainerLinkEl.getAttribute("href")}"]`);
+      
+      if (mobileElements.length === 1) {
+        mobileNestedFolderContainer = mobileElements[0].closest(".header-menu-nav-item");
+      } else if (mobileElements.length > 1) {
+        // Match by both URL and innerText if multiple elements exist
+        const desktopText = nestedFolderContainerLinkEl.innerText.trim();
+        for (const mobileElement of mobileElements) {
+          if (mobileElement.innerText.trim() === desktopText) {
+            mobileNestedFolderContainer = mobileElement.closest(".header-menu-nav-item");
+            break;
+          }
+        }
+      }
 
       if (!this.nestedFolders[nestedFolderContainerText]) {
         this.nestedFolders[nestedFolderContainerText] = {
@@ -96,7 +111,7 @@ class NestedFolders {
             {
               folderId: null,
               el: item,
-              mobileEl: mobileItem,
+              mobileEl: mobileItem, 
               mobileHTML: null,
               href: linkEl.getAttribute("href"),
             },
