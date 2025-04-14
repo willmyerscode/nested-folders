@@ -12,39 +12,33 @@ class NestedFolders {
 
     // Dispatch the event
     return elem.dispatchEvent(event);
-  };
+  }
   constructor(settings) {
-    this.headerFolderItems = document.querySelectorAll('.header-display-desktop .header-nav-folder-content a');
-    this.headerFoldersTitles = document.querySelectorAll('.header-display-desktop .header-nav-folder-title');
-    this.mobileLinks = document.querySelectorAll('.header-menu-nav-list a');
+    this.headerFolderItemsNew = document.querySelectorAll(".header-display-desktop .header-nav-folder-item");
+    this.headerFolderItems = document.querySelectorAll(".header-display-desktop .header-nav-folder-content a");
+    this.headerFoldersTitles = document.querySelectorAll(".header-display-desktop .header-nav-folder-title");
+    this.mobileLinks = document.querySelectorAll(".header-menu-nav-list a");
     this.nestedFolders = {};
-    this.header = document.querySelector('#header');
-    this.settings = settings
+    this.header = document.querySelector("#header");
+    this.settings = settings;
     this.init();
   }
 
   init() {
     this.getNestedItems();
-    this.buildNestedFolders();
-    this.addAccordionClickEvent();
+    this.buildDesktopFolders();
+    this.buildMobileFolders();
     this.addAccessibility();
-    this.addPluginLoadEvent();
-    
+
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      data.parentFolder.addEventListener('mouseenter', () => {
-        this.checkFolderPositions()
+      data.parentFolder.addEventListener("mouseenter", () => {
+        this.checkFolderPositions();
       });
     }
-    NestedFolders.emitEvent('wmNestedFolders:loaded');
-  }
-
-  addPluginLoadEvent() {
-    const handlePluginLoad = () => {
-      this.setActiveNavItem();
-    }
-
-    document.addEventListener('wmNestedFolders:loaded', handlePluginLoad);
+    this.setActiveNavItem();
+    this.removeDash();
+    NestedFolders.emitEvent("wmNestedFolders:loaded");
   }
 
   checkFolderPositions() {
@@ -52,269 +46,301 @@ class NestedFolders {
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
       let windowWidth = window.innerWidth;
-      let rightEdge = window.innerWidth - (window.innerWidth * 0.03)
+      let rightEdge = window.innerWidth - window.innerWidth * 0.03;
       let folderRight = data.folder.getBoundingClientRect().right;
-      
-      if (rightEdge < folderRight) { // If Folder is off the right edge
-        data.folder.closest('.header-nav-item--folder').classList.add('folder-side--flipped')
+
+      if (rightEdge < folderRight) {
+        // If Folder is off the right edge
+        data.folder.closest(".header-nav-item--folder").classList.add("folder-side--flipped");
 
         let folderLeft = data.folder.getBoundingClientRect().left;
-        let leftEdge = (window.innerWidth * 0.03)
+        let leftEdge = window.innerWidth * 0.03;
         if (folderLeft < leftEdge) {
-          const shrinkFolderBy = (window.innerWidth * 0.03) - folderLeft;
-          this.header.style.setProperty('--nested-folder-max-width', shrinkFolderBy + 'px')
+          const shrinkFolderBy = window.innerWidth * 0.03 - folderLeft;
+          this.header.style.setProperty("--nested-folder-max-width", shrinkFolderBy + "px");
         } else {
-          this.header.style.setProperty('--nested-folder-max-width', 'initial')
+          this.header.style.setProperty("--nested-folder-max-width", "initial");
         }
-        
+
         break;
       } else {
-        data.folder.closest('.header-nav-item--folder').classList.remove('folder-side--flipped')
-        this.header.style.setProperty('--nested-folder-max-width', 'initial')
+        data.folder.closest(".header-nav-item--folder").classList.remove("folder-side--flipped");
+        this.header.style.setProperty("--nested-folder-max-width", "initial");
       }
     }
   }
 
   getNestedItems() {
-    this.headerFolderItems.forEach(item => {
-      let itemHref = item.getAttribute('href');
-    
-      this.headerFoldersTitles.forEach(title => {
-        let titleHref = title.getAttribute('href');
-        
-        if(itemHref === titleHref) {
-          const selector = `[data-folder="root"] .header-menu-nav-wrapper [href="${titleHref}"][data-folder-id]`;
-          const mobileEquiv = document.querySelector(selector);
+    this.headerFolderItemsNew.forEach(item => {
+      const itemText = item.textContent.trim();
 
-          let titleText = title.textContent.trim();
-          let folderItems = title.nextElementSibling.querySelectorAll('.header-nav-folder-item a');
-          let parentFolder = item.closest('.header-nav-item--folder');
-          parentFolder.classList.add('wm-nested-dropdown');
-          const mobileTrigger = document.querySelector(`.header-menu-nav-list a[href="${titleHref}"]:not([data-folder-id])`);
-          
-          this.nestedFolders[titleText] = {
-            trigger: item, // The DOM element for the folder title
-            parentFolder: parentFolder,
-            mobileTrigger: mobileTrigger,
-            links: Array.from(folderItems).map(folderItem => ({
-              folderId: mobileEquiv.dataset.folderId,
-              el: folderItem,
-              mobileEl: document.querySelector(`.header-menu-nav-list [data-folder="${mobileEquiv.dataset.folderId}"] [href="${folderItem.getAttribute('href')}"]`),
-              text: folderItem.textContent.trim(),
-              html: folderItem.innerHTML,
-              mobileHTML: document.querySelector(`.header-menu-nav-list [data-folder="${mobileEquiv.dataset.folderId}"] [href="${folderItem.getAttribute('href')}"]`).innerHTML,
-              href: folderItem.getAttribute('href')
-            }))
-          };
-        }
-      });
-    })
+      if (!itemText.startsWith("-")) {
+        return;
+      }
+      const linkEl = item.querySelector("a");
+      const mobileItem = document.querySelector(`.header-menu-nav .container.header-menu-nav-item a[href="${linkEl.getAttribute("href")}"]`)?.closest(".header-menu-nav-item");
+
+      const nestedFolderContainer = item.previousElementSibling;
+      const nestedFolderContainerText = nestedFolderContainer.textContent.trim();
+      const nestedFolderContainerLinkEl = nestedFolderContainer.querySelector("a");
+      const mobileNestedFolderContainer = document.querySelector(`.header-menu-nav .container.header-menu-nav-item a[href="${nestedFolderContainerLinkEl.getAttribute("href")}"]`)?.closest(".header-menu-nav-item");
+
+      if (!this.nestedFolders[nestedFolderContainerText]) {
+        this.nestedFolders[nestedFolderContainerText] = {
+          item: nestedFolderContainer,
+          linkEl: linkEl,
+          parentFolder: nestedFolderContainer.closest(".header-nav-item--folder"),
+          mobileTrigger: mobileNestedFolderContainer,
+          mobileItemsContainer: null,
+          nestedItems: [
+            {
+              folderId: null,
+              el: item,
+              mobileEl: mobileItem,
+              mobileHTML: null,
+              href: linkEl.getAttribute("href"),
+            },
+          ],
+        };
+      } else {
+        this.nestedFolders[nestedFolderContainerText].nestedItems.push({
+          folderId: null,
+          el: item,
+          mobileEl: mobileItem,
+          text: itemText.slice(1).trim(),
+          mobileHTML: null,
+          href: linkEl.getAttribute("href"),
+        });
+      }
+
+      item.remove();
+    });
   }
 
   setActiveNavItem() {
-    const links = document.querySelectorAll('#header .header-menu-nav-folder-content a:not([data-action]), #header .header-nav a:not([data-action])');
+    const links = document.querySelectorAll("#header .header-menu-nav-folder-content a:not([data-action]), #header .header-nav a:not([data-action])");
 
     links.forEach(link => {
-      if (window.location.pathname === link.getAttribute('href')) {
+      if (window.location.pathname === link.getAttribute("href")) {
         /* Desktop Nav Folder Level 1 */
-        const desktopNestedFolderItem = link.closest('.wm-nested-dropdown');
+        const desktopNestedFolderItem = link.closest(".wm-nested-dropdown");
         if (desktopNestedFolderItem) {
-          desktopNestedFolderItem.classList.add('header-nav-item--active');
+          desktopNestedFolderItem.classList.add("header-nav-item--active");
         }
 
         /* Desktop Nav Folder Level 2 */
-        const desktopNestedFolder = link.closest('.header-nav-item--nested-folder');
+        const desktopNestedFolder = link.closest(".header-nav-item--nested-folder");
         if (desktopNestedFolder) {
-          desktopNestedFolder.classList.add('header-nested-nav-folder-item--active');
+          desktopNestedFolder.classList.add("header-nested-nav-folder-item--active");
         }
 
         /* Desktop Nav Folder Level 3 */
-        const desktopNestedLink = link.closest('.nested-folder .header-nav-folder-item');
+        const desktopNestedLink = link.closest(".nested-folder .header-nav-folder-item");
         if (desktopNestedLink) {
-          desktopNestedLink.classList.add('header-nav-folder-item--active');
+          desktopNestedLink.classList.add("header-nav-folder-item--active");
         }
 
         /* Mobile Nav Item */
-        const headerMenuNavItem = link.closest('.header-menu-nav-item');
+        const headerMenuNavItem = link.closest(".header-menu-nav-item");
         if (headerMenuNavItem) {
-          
-          headerMenuNavItem.classList.add('header-menu-nav-item--active');
+          headerMenuNavItem.classList.add("header-menu-nav-item--active");
         }
 
         /* Mobile Nav Folder */
-        const mobileLink = link.closest('[data-folder]');
-          if (mobileLink) {
-            const href = mobileLink.dataset.folder;
-            const navLink = document.querySelector(`.header-menu-nav-item a[data-folder-id="${href}"]`)
-            navLink?.parentElement.classList.add('header-menu-nav-item--active')
-          }
+        const mobileLink = link.closest("[data-folder]");
+        if (mobileLink) {
+          const href = mobileLink.dataset.folder;
+          const navLink = document.querySelector(`.header-menu-nav-item a[data-folder-id="${href}"]`);
+          navLink?.parentElement.classList.add("header-menu-nav-item--active");
+        }
 
-        link.setAttribute('aria-current', 'page')
+        link.setAttribute("aria-current", "page");
       }
     });
   }
 
-  buildNestedFolders() {      
+  removeDash() {
+    document.querySelectorAll(".header-nav-item--nested-folder a, .header-menu-nav-item--accordion-folder a").forEach(item => {
+      // Find all text nodes within the element
+      const walkNode = document.createTreeWalker(item, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+
+      while ((node = walkNode.nextNode())) {
+        let text = node.nodeValue.trim();
+        if (text.startsWith("-")) {
+          text = text.substring(1).trim();
+          node.nodeValue = text;
+        }
+      }
+    });
+  }
+
+  buildDesktopFolders() {
+    function createFolderText(text) {
+      //all lowercase, no spaces, no special characters, yes dashes instead of spaces
+      return text.toLowerCase().replace(/[^a-z0-9]/g, "-");
+    }
     let nestedFolderShouldClickthrough = this.settings.linkNestedFolderOnDesktop;
+
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      let trigger = data.trigger;
-      let triggerParent = trigger.closest('.header-nav-folder-item');
-      let mobileTrigger = data.mobileTrigger;
-      let mobileTriggerParent = mobileTrigger.closest('.header-menu-nav-item');
-      let mobileTriggerParentClone = mobileTriggerParent.cloneNode(true);
+      let trigger = data.item;
+      const linkEl = data.item.querySelector("a");
       let parentFolder = data.parentFolder;
 
       /*Create Desktop Folder*/
-      triggerParent.classList.add('header-nav-item--nested-folder')
-      let nestedFolder = document.createElement('div');
-      nestedFolder.classList.add('nested-folder', 'header-nav-folder-content');
+      trigger.classList.add("header-nav-item--nested-folder");
+      linkEl.setAttribute("aria-label", "nested folder dropdown");
+      linkEl.setAttribute("aria-controls", "nested-folder-" + createFolderText(data.item.textContent.trim()));
+      linkEl.setAttribute("aria-expanded", "false");
+      // linkEl.addEventListener("focus", function (e) {
+      //   linkEl.setAttribute("aria-expanded", "true");
+      // });
+      // linkEl.addEventListener("blur", function (e) {
+      //   //linkEl.setAttribute("aria-expanded", "false");
+      // });
 
-      /*Create Mobile Folder*/
-      mobileTriggerParent.classList.add('header-menu-nav-item--accordion-folder')
-      let mobileAccordionContent = document.createElement('div');
-      mobileTrigger.innerHTML += `<span class="icon">${this.settings.mobileIcon}</span>`;
-      mobileAccordionContent.classList.add('accordion-folder-content');
-      mobileAccordionContent.innerHTML = '<div class="accordion-folder-wrapper"></div>';
-      let mobileAccordionWrapper = mobileAccordionContent.querySelector('.accordion-folder-wrapper')
+      let nestedFolder = document.createElement("div");
+      nestedFolder.classList.add("nested-folder", "header-nav-folder-content");
+      nestedFolder.setAttribute("id", "nested-folder-" + createFolderText(data.item.textContent.trim()));
 
       /*Adding Links To Folders*/
-      let desktopFolderToRemove, mobileFolderToRemove, mobileFolderTriggerToRemove;
-      for (let i = 0; i < data.links.length; i++) {
-        let link = data.links[i];
-      
-        desktopFolderToRemove = link.el.closest('.header-nav-item--folder');
-        link.el.innerHTML = '<span class="header-nav-folder-item-content">' + link.html + '</span>';
-        // Skip the first link if nestedFolderShouldClickthrough is true
-        if (!(nestedFolderShouldClickthrough && i === 0)) {
-          nestedFolder.append(link.el.parentElement);
-        }
-      
-        mobileFolderToRemove = link.mobileEl.closest('[data-folder]');
-        mobileFolderTriggerToRemove = document.querySelector(`[data-folder-id="${link.folderId}"]`).closest('.container.header-menu-nav-item');
-        mobileAccordionWrapper.append(link.mobileEl.parentElement);
-        link.mobileEl.innerHTML = link.text;
-      }
+      data.nestedItems.forEach(link => {
+        link.el.innerHTML = '<span class="header-nav-folder-item-content">' + link.el.innerHTML + "</span>";
+        nestedFolder.append(link.el);
+      });
 
-      desktopFolderToRemove?.remove();
-      mobileFolderToRemove.remove();
-      mobileFolderTriggerToRemove.remove();
-      
-      triggerParent.append(nestedFolder)
-      data.folder = nestedFolder
-      
-      /*Add Mobile Folder*/
-      mobileTriggerParent.append(mobileAccordionContent)
-
+      trigger.append(nestedFolder);
+      data.folder = nestedFolder;
 
       //Parent Folder
-      if (parentFolder.querySelector('.header-nav-folder-content > .header-nav-item--nested-folder:first-child')) {
-        parentFolder.querySelector('a').setAttribute('rel', 'nofollow');
+      if (parentFolder.querySelector(".header-nav-folder-content > .header-nav-item--nested-folder:first-child")) {
+        parentFolder.querySelector("a").setAttribute("rel", "nofollow");
       }
-      
+
       /*Should DesktopFolder Clickthrough?*/
       if (nestedFolderShouldClickthrough) {
-        let newUrl = data.links[0].href;
-        trigger.setAttribute('href', newUrl)
+        let newUrl = data.nestedItems[0].href;
+        data.nestedItems[0].el.classList.add("hidden-link");
+        trigger.querySelector("a").setAttribute("href", newUrl);
       } else {
-        trigger.setAttribute('rel', 'nofollow');
-        trigger.addEventListener('click', (e) => {
-          //e.stopPropagation();
+        trigger.querySelector("a").setAttribute("rel", "nofollow");
+        trigger.querySelector("a").addEventListener("click", e => {
           e.preventDefault();
-        })
+        });
       }
     }
   }
-  addAccordionClickEvent() {
-    for (let id in this.nestedFolders){
+
+  buildMobileFolders() {
+    let nestedFolderShouldClickthrough = this.settings.linkNestedFolderOnDesktop;
+
+    for (let item in this.nestedFolders) {
+      let data = this.nestedFolders[item];
+      let mobileTrigger = data.mobileTrigger;
+
+      /*Create Mobile Folder*/
+      mobileTrigger.classList.add("header-menu-nav-item--accordion-folder");
+      let mobileAccordionContent = document.createElement("div");
+      mobileTrigger.querySelector("a").innerHTML += `<span class="icon">${this.settings.mobileIcon}</span>`;
+      mobileAccordionContent.classList.add("accordion-folder-content");
+      mobileAccordionContent.innerHTML = '<div class="accordion-folder-wrapper"></div>';
+      let mobileAccordionWrapper = mobileAccordionContent.querySelector(".accordion-folder-wrapper");
+
+      data.mobileItemsContainer = mobileAccordionContent;
+
+      /*Adding Links To Folders*/
+      data.nestedItems.forEach(link => {
+        mobileAccordionWrapper.append(link.mobileEl);
+        link.mobileEl.innerHTML = link.mobileEl.innerHTML;
+      });
+
+      /*Add Mobile Folder*/
+      mobileTrigger.append(mobileAccordionContent);
+    }
+
+    for (let id in this.nestedFolders) {
       let item = this.nestedFolders[id];
-      let mobileTrigger = item.mobileTrigger;
-      mobileTrigger.addEventListener("click", function(e) {
-        //e.stopPropagation();
+      let mobileTrigger = item.mobileTrigger.querySelector("a");
+      let mobileItemsContainer = item.mobileItemsContainer;
+      mobileTrigger.addEventListener("click", function (e) {
         e.preventDefault();
-        const content = this.nextElementSibling;
-    
-        if (content.style.maxHeight) {
-          mobileTrigger.classList.remove('open')
-          content.style.maxHeight = null;
+
+        if (mobileItemsContainer.style.maxHeight) {
+          mobileTrigger.classList.remove("open");
+          mobileItemsContainer.style.maxHeight = null;
         } else {
-          mobileTrigger.classList.add('open')
-          content.style.maxHeight = content.scrollHeight + "px";
+          mobileTrigger.classList.add("open");
+          mobileItemsContainer.style.maxHeight = mobileItemsContainer.scrollHeight + "px";
         }
-    
       });
     }
   }
+
   addAccessibility() {
-    document.addEventListener('focus', function(event) {
-      document.querySelectorAll('.header-nav-item--nested-folder.focus').forEach(el => el.classList.remove('focus'));
-      let target = event.target;
-      let desktopFolder = target.closest('.header-nav-item--nested-folder')
-      if (desktopFolder) {
-        desktopFolder.classList.add('focus')
-      } 
-    }, true); 
-
-    /* Remove Focus from all inner anchor links and from folder if you hover out of a folder */
-    document.querySelectorAll('.header-nav-folder-content').forEach(folder => {
-      folder.addEventListener('mouseleave', (e) =>{
-        e.target.querySelectorAll('a').forEach(a => a.blur())
-        document.querySelectorAll('.header-nav-item--nested-folder.focus').forEach(el => el.classList.remove('focus'));
-      })
-    })
-
-    /* Remove Focus class from items when you mouseenter a new item*/
-    for (const item in this.nestedFolders) {
-      this.nestedFolders[item].trigger?.addEventListener('mouseenter', () => {
-        document.querySelectorAll('.header-nav-item--nested-folder.focus').forEach(el => el.classList.remove('focus'));
-      });
-    }
+    document.addEventListener(
+      "focus",
+      (event) => {
+        for (let item in this.nestedFolders) {
+          let data = this.nestedFolders[item];
+          data.item.querySelector("a").setAttribute("aria-expanded", "false");
+        }
+        let target = event.target;
+        let closestFolder = target.closest(".header-nav-item--nested-folder");
+        if (closestFolder || target.getAttribute("aria-label") === "nested folder dropdown") {
+          closestFolder.querySelector("a").setAttribute("aria-expanded", "true");
+        }
+        
+      },
+      true
+    );
   }
 }
 
-(function() {
-  function deepMerge (...objs) {
-  	function getType (obj) {
-  		return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
-  	}
-  	function mergeObj (clone, obj) {
-  		for (let [key, value] of Object.entries(obj)) {
-  			let type = getType(value);
-  			if (clone[key] !== undefined && getType(clone[key]) === type && ['array', 'object'].includes(type)) {
-  				clone[key] = deepMerge(clone[key], value);
-  			} else {
-  				clone[key] = structuredClone(value);
-  			}
-  		}
-  	}
-  	let clone = structuredClone(objs.shift());
-  	for (let obj of objs) {
-  		let type = getType(obj);
-  		if (getType(clone) !== type) {
-  			clone = structuredClone(obj);
-  			continue;
-  		}
-  		if (type === 'array') {
-  			clone = [...clone, ...structuredClone(obj)];
-  		} else if (type === 'object') {
-  			mergeObj(clone, obj);
-  		} else {
-  			clone = obj;
-  		}
-  	}
-  
-  	return clone;
-  
+(function () {
+  function deepMerge(...objs) {
+    function getType(obj) {
+      return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
+    }
+    function mergeObj(clone, obj) {
+      for (let [key, value] of Object.entries(obj)) {
+        let type = getType(value);
+        if (clone[key] !== undefined && getType(clone[key]) === type && ["array", "object"].includes(type)) {
+          clone[key] = deepMerge(clone[key], value);
+        } else {
+          clone[key] = structuredClone(value);
+        }
+      }
+    }
+    let clone = structuredClone(objs.shift());
+    for (let obj of objs) {
+      let type = getType(obj);
+      if (getType(clone) !== type) {
+        clone = structuredClone(obj);
+        continue;
+      }
+      if (type === "array") {
+        clone = [...clone, ...structuredClone(obj)];
+      } else if (type === "object") {
+        mergeObj(clone, obj);
+      } else {
+        clone = obj;
+      }
+    }
+
+    return clone;
   }
   const userSettings = window.wmNestedFolderSettings ? window.wmNestedFolderSettings : {};
   const settings = {
+    installation: "dashes",
     linkNestedFolderOnDesktop: false,
     mobileIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>`,
-    mobileCategoryPrepend: '',
-    mobileCategoryAppend: '',
-    reformatHeaderLinks: false
+    mobileCategoryPrepend: "",
+    mobileCategoryAppend: "",
+    reformatHeaderLinks: false,
   };
   const mergedSettings = deepMerge({}, settings, userSettings);
   const wmNestedFolders = new NestedFolders(mergedSettings);
-  document.body.classList.add('wm-nested-folders-loaded')
-}())
+  window.wmNestedFolders = wmNestedFolders;
+  document.body.classList.add("wm-nested-folders-loaded");
+})();
