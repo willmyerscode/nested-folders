@@ -71,54 +71,41 @@ class NestedFolders {
   }
 
   getNestedItems() {
+    // Get all Dropdown Folders and loop through each
     document.querySelectorAll(".header-display-desktop .header-nav-item--folder .header-nav-folder-content").forEach(item => {
       const items = item.querySelectorAll(".header-nav-folder-item");
       let currentItem = null;
-
-      for (const item of items) {
+      
+      // Convert to array for easier manipulation
+      const itemsArray = Array.from(items);
+      
+      // For each item in the dropdown folder
+      for (let i = 0; i < itemsArray.length; i++) {
+        const item = itemsArray[i];
         const itemText = item.textContent.trim();
-
-        // If the item is a stop item, remove it and reset the current item
-        if (itemText.startsWith(this.settings.nestedFolderStop)) {
-          currentItem = null;
-          item.remove();
-          continue;
-        }
-
-        // If the item is a prefix item, add it to the nestedFoldersNew object
-        if (itemText.startsWith(this.settings.nestedFolderPrefix)) {
-          let mobileNestedFolderContainer = null;
-          const mobileElements = document.querySelectorAll(`.header-menu-nav .container.header-menu-nav-item a[href="${item.querySelector("a").getAttribute("href")}"]`);
-    
-          if (mobileElements.length === 1) {
-            mobileNestedFolderContainer = mobileElements[0].closest(".header-menu-nav-item");
-          } else if (mobileElements.length > 1) {
-            // Match by both URL and innerText if multiple elements exist
-            const desktopText = item.querySelector("a").innerText.trim();
-            for (const mobileElement of mobileElements) {
-              if (mobileElement.innerText.trim() === desktopText) {
-                mobileNestedFolderContainer = mobileElement.closest(".header-menu-nav-item");
-                break;
-              }
-            }
+        
+        // If current item doesn't have prefix
+        if (!itemText.startsWith(this.settings.nestedItemPrefix)) {
+          // Check if the next item has a prefix (if it exists)
+          const nextItem = i < itemsArray.length - 1 ? itemsArray[i + 1] : null;
+          
+          if (nextItem && nextItem.textContent.trim().startsWith(this.settings.nestedItemPrefix)) {
+            // This is a parent folder - the next item has a prefix
+            const id = itemText.trim().replace(/\s+/g, '-').toLowerCase();
+            
+            this.nestedFolders[id] = {
+              item: item,
+              id: id,
+              linkEl: item.querySelector("a"),
+              parentFolder: item.closest(".header-nav-item--folder"),
+              mobileTrigger: this.findMobileTrigger(item),
+              nestedItems: [],
+            };
+            currentItem = this.nestedFolders[id];
           }
-
-          const id = itemText.slice(this.settings.nestedFolderPrefix.length).trim();
-          this.nestedFolders[id] = {
-            item: item,
-            id: id,
-            linkEl: item.querySelector("a"),
-            parentFolder: item.closest(".header-nav-item--folder"),
-            mobileTrigger: mobileNestedFolderContainer,
-            nestedItems: [],
-          };
-          currentItem = this.nestedFolders[id];
-          continue;
-        }
-
-
-        // If the item is a nested item, add it to the nestedFoldersNew object
-        if (currentItem) {
+        } 
+        // If the item has a prefix and we have a current parent item
+        else if (currentItem) {
           this.nestedFolders[currentItem.id].nestedItems.push({
             el: item,
             mobileEl: document.querySelector(`.header-menu-nav .container.header-menu-nav-item a[href="${item.querySelector("a").getAttribute("href")}"]`)?.closest(".header-menu-nav-item"),
@@ -128,6 +115,31 @@ class NestedFolders {
         }
       }
     });
+  }
+
+  // Helper method to find the mobile trigger element
+  findMobileTrigger(item) {
+    let mobileNestedFolderContainer = null;
+    const linkElement = item.querySelector("a");
+    
+    if (!linkElement) return null;
+    
+    const mobileElements = document.querySelectorAll(`.header-menu-nav .container.header-menu-nav-item a[href="${linkElement.getAttribute("href")}"]`);
+
+    if (mobileElements.length === 1) {
+      mobileNestedFolderContainer = mobileElements[0].closest(".header-menu-nav-item");
+    } else if (mobileElements.length > 1) {
+      // Match by both URL and innerText if multiple elements exist
+      const desktopText = linkElement.innerText.trim();
+      for (const mobileElement of mobileElements) {
+        if (mobileElement.innerText.trim() === desktopText) {
+          mobileNestedFolderContainer = mobileElement.closest(".header-menu-nav-item");
+          break;
+        }
+      }
+    }
+    
+    return mobileNestedFolderContainer;
   }
 
   setActiveNavItem() {
@@ -180,8 +192,8 @@ class NestedFolders {
 
       while ((node = walkNode.nextNode())) {
         let text = node.nodeValue.trim();
-        if (text.startsWith(this.settings.nestedFolderPrefix)) {
-          text = text.substring(this.settings.nestedFolderPrefix.length).trim();
+        if (text.startsWith(this.settings.nestedItemPrefix)) {
+          text = text.substring(this.settings.nestedItemPrefix.length).trim();
           node.nodeValue = text;
         }
       }
@@ -355,8 +367,7 @@ class NestedFolders {
   const userSettings = window.wmNestedFolderSettings ? window.wmNestedFolderSettings : {};
   const settings = {
     installation: "dashes",
-    nestedFolderPrefix: "--",
-    nestedFolderStop: "---",
+    nestedItemPrefix: "--",
     linkNestedFolderOnDesktop: false,
     mobileIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>`,
     mobileCategoryPrepend: "",
