@@ -91,7 +91,17 @@ class NestedFolders {
 
           if (nextItem && nextItem.textContent.trim().startsWith(this.settings.nestedItemPrefix)) {
             // This is a parent folder - the next item has a prefix
-            const id = itemText.trim().replace(/\s+/g, "-").toLowerCase();
+            const itemLink = item.querySelector("a");
+            const itemHref = itemLink ? itemLink.getAttribute("href") : "";
+            let id = (itemText.trim() + "-" + itemHref).replace(/\s+/g, "-").replace(/[^a-z0-9\-]/gi, "").toLowerCase();
+
+            // Check for duplicate IDs (same text and URL) and add counter if needed
+            let counter = 1;
+            let originalId = id;
+            while (this.nestedFolders[id]) {
+              id = originalId + "-" + counter;
+              counter++;
+            }
 
             this.nestedFolders[id] = {
               item: item,
