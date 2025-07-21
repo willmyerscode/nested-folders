@@ -35,6 +35,9 @@ class NestedFolders {
       data.parentFolder.addEventListener("mouseenter", () => {
         this.checkFolderPositions();
       });
+      data.parentFolder.addEventListener("mouseleave", () => {
+        this.checkFolderPositions();
+      });
     }
     this.setActiveNavItem();
     this.removeDash();
@@ -42,10 +45,8 @@ class NestedFolders {
   }
 
   checkFolderPositions() {
-    const isOver = false;
     for (let item in this.nestedFolders) {
       let data = this.nestedFolders[item];
-      let windowWidth = window.innerWidth;
       let rightEdge = window.innerWidth - window.innerWidth * 0.03;
       let folderRight = data.folder.getBoundingClientRect().right;
 
@@ -75,6 +76,7 @@ class NestedFolders {
     document.querySelectorAll(".header-display-desktop .header-nav-item--folder .header-nav-folder-content").forEach(item => {
       const items = item.querySelectorAll(".header-nav-folder-item");
       let currentItem = null;
+      let itemsToRemove = []; // Track items to remove after processing
 
       // Convert to array for easier manipulation
       const itemsArray = Array.from(items);
@@ -119,12 +121,14 @@ class NestedFolders {
           const desktopLink = item.querySelector("a");
           const href = desktopLink.getAttribute("href");
 
-          // Find all desktop nested items with the same href within folder content
-          const allDesktopNestedLinks = document.querySelectorAll(`.header-display-desktop .header-nav-folder-content .header-nav-folder-item a[href="${href}"]`);
+          // Find all desktop nested items with the same href within the CURRENT folder content only
+          const currentFolderContent = item.closest(".header-nav-folder-content");
+          const allDesktopNestedLinks = currentFolderContent.querySelectorAll(`.header-nav-folder-item a[href="${href}"]`);
           const desktopIndex = Array.from(allDesktopNestedLinks).indexOf(desktopLink);
 
           // Find all corresponding mobile items with the same href
-          const allMobileLinks = document.querySelectorAll(`.header-menu-nav-wrapper .container.header-menu-nav-item a[href="${href}"]`);
+          const folderId = currentItem.parentFolder.querySelector("a").getAttribute("href");
+          const allMobileLinks = document.querySelectorAll(`[data-folder="${folderId}"] .header-menu-nav-folder-content .container.header-menu-nav-item:not(.header-menu-controls) a[href="${href}"]`);
 
           let mobileItemEl = null;
           if (desktopIndex !== -1 && desktopIndex < allMobileLinks.length) {
@@ -138,9 +142,15 @@ class NestedFolders {
             mobileEl: mobileItemEl, // Use the index-matched mobile element
             href: href,
           });
-          item.remove();
+          itemsToRemove.push(item); // Queue for removal instead of removing immediately
         }
       }
+      
+      // Remove all queued items after processing is complete
+      itemsToRemove.forEach(itemToRemove => {
+        itemToRemove.remove();
+      });
+      
     });
   }
 
