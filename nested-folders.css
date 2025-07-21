@@ -17,11 +17,10 @@
 }*/
 
 #header .header-nav .nested-folder.header-nav-folder-content {
-  display: none;
   pointer-events: none;
   position: absolute;
   left: calc(100%);
-  top: calc(-0.5em - (var(--folder-border-thickness, 1px) / 2));
+  top: calc(-0.5em - var(--folder-border-thickness, 1px));
   padding: 0.5em 0em;
   white-space: initial;
   min-width: var(--nested-folder-min-width, 200px);
@@ -30,6 +29,7 @@
   box-sizing: border-box;
   visibility: hidden;
   opacity:0;
+  z-index: -1000;
 }
 #header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
 #header .header-nav .header-nav-item--nested-folder > a[aria-expanded="true"] + .nested-folder{
@@ -37,6 +37,7 @@
   pointer-events: auto;
   opacity: 1;
   visibility: visible;
+  z-index: 10;
 }
 #header  .header-nav .header-nav-item--nested-folder{
   position: relative;
