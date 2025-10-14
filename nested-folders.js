@@ -1,349 +1,430 @@
 class NestedFolders {
   static emitEvent(type, detail = {}, elem = document) {
-    // Make sure there's an event type
     if (!type) return;
-
-    // Create a new event
     let event = new CustomEvent(type, {
       bubbles: true,
       cancelable: true,
       detail: detail,
     });
-
-    // Dispatch the event
     return elem.dispatchEvent(event);
   }
+
   constructor(settings) {
-    this.headerFolderItemsNew = document.querySelectorAll(".header-display-desktop .header-nav-folder-item");
-    this.headerFolderItems = document.querySelectorAll(".header-display-desktop .header-nav-folder-content a");
-    this.headerFoldersTitles = document.querySelectorAll(".header-display-desktop .header-nav-folder-title");
-    this.mobileLinks = document.querySelectorAll(".header-menu-nav-list a");
-    this.nestedFolders = {};
     this.header = document.querySelector("#header");
     this.settings = settings;
+    this.desktopNestedFolders = [];
+    this.mobileNestedFolders = [];
     this.init();
   }
 
   init() {
-    this.getNestedItems();
-    this.buildDesktopFolders();
-    this.buildMobileFolders();
+    this.processDesktopFolders();
+    this.processMobileFolders();
     this.addAccessibility();
-
-    for (let item in this.nestedFolders) {
-      let data = this.nestedFolders[item];
-      data.parentFolder.addEventListener("mouseenter", () => {
-        this.checkFolderPositions();
-      });
-      data.parentFolder.addEventListener("mouseleave", () => {
-        this.checkFolderPositions();
-      });
-    }
     this.setActiveNavItem();
-    this.removeDash();
+    this.removeDashPrefix();
     NestedFolders.emitEvent("wmNestedFolders:loaded");
   }
 
-  checkFolderPositions() {
-    for (let item in this.nestedFolders) {
-      let data = this.nestedFolders[item];
-      let rightEdge = window.innerWidth - window.innerWidth * 0.03;
-      let folderRight = data.folder.getBoundingClientRect().right;
+  /**
+   * Process Desktop Navigation
+   * Finds items with the prefix (--) and groups them under parent items
+   */
+  processDesktopFolders() {
+    const desktopFolderContents = document.querySelectorAll(
+      ".header-display-desktop .header-nav-item--folder .header-nav-folder-content"
+    );
 
-      if (rightEdge < folderRight) {
-        // If Folder is off the right edge
-        data.folder.closest(".header-nav-item--folder").classList.add("folder-side--flipped");
+    desktopFolderContents.forEach((folderContent, folderIndex) => {
+      const folderItems = Array.from(folderContent.querySelectorAll(".header-nav-folder-item"));
+      const parentFolder = folderContent.closest(".header-nav-item--folder");
+      
+      let currentParentItem = null;
+      const itemsToRemove = [];
 
-        let folderLeft = data.folder.getBoundingClientRect().left;
-        let leftEdge = window.innerWidth * 0.03;
-        if (folderLeft < leftEdge) {
-          const shrinkFolderBy = window.innerWidth * 0.03 - folderLeft;
-          this.header.style.setProperty("--nested-folder-max-width", shrinkFolderBy + "px");
-        } else {
-          this.header.style.setProperty("--nested-folder-max-width", "initial");
-        }
-
-        break;
-      } else {
-        data.folder.closest(".header-nav-item--folder").classList.remove("folder-side--flipped");
-        this.header.style.setProperty("--nested-folder-max-width", "initial");
-      }
-    }
-  }
-
-  getNestedItems() {
-    // Get all Dropdown Folders and loop through each
-    document.querySelectorAll(".header-display-desktop .header-nav-item--folder .header-nav-folder-content").forEach(item => {
-      const items = item.querySelectorAll(".header-nav-folder-item");
-      let currentItem = null;
-      let itemsToRemove = []; // Track items to remove after processing
-
-      // Convert to array for easier manipulation
-      const itemsArray = Array.from(items);
-
-      // For each item in the dropdown folder
-      for (let i = 0; i < itemsArray.length; i++) {
-        const item = itemsArray[i];
+      for (let i = 0; i < folderItems.length; i++) {
+        const item = folderItems[i];
         const itemText = item.textContent.trim();
 
-        // If current item doesn't have prefix
-        if (!itemText.startsWith(this.settings.nestedItemPrefix)) {
-          // Check if the next item has a prefix (if it exists)
-          const nextItem = i < itemsArray.length - 1 ? itemsArray[i + 1] : null;
+        // Check if this item has the nested prefix
+        const hasPrefix = itemText.startsWith(this.settings.nestedItemPrefix);
+        
+        // Check if next item has prefix (indicates current item is a parent)
+        const nextItem = folderItems[i + 1];
+        const nextHasPrefix = nextItem && nextItem.textContent.trim().startsWith(this.settings.nestedItemPrefix);
 
-          if (nextItem && nextItem.textContent.trim().startsWith(this.settings.nestedItemPrefix)) {
-            // This is a parent folder - the next item has a prefix
-            const itemLink = item.querySelector("a");
-            const itemHref = itemLink ? itemLink.getAttribute("href") : "";
-            let id = (itemText.trim() + "-" + itemHref).replace(/\s+/g, "-").replace(/[^a-z0-9\-]/gi, "").toLowerCase();
-
-            // Check for duplicate IDs (same text and URL) and add counter if needed
-            let counter = 1;
-            let originalId = id;
-            while (this.nestedFolders[id]) {
-              id = originalId + "-" + counter;
-              counter++;
-            }
-
-            this.nestedFolders[id] = {
-              item: item,
-              id: id,
-              linkEl: item.querySelector("a"),
-              parentFolder: item.closest(".header-nav-item--folder"),
-              mobileTrigger: this.findMobileTrigger(item),
-              nestedItems: [],
-            };
-            currentItem = this.nestedFolders[id];
-          }
-        }
-        // If the item has a prefix and we have a current parent item
-        else if (currentItem) {
-          const desktopLink = item.querySelector("a");
-          const href = desktopLink.getAttribute("href");
-
-          // Find all desktop nested items with the same href within the CURRENT folder content only
-          const currentFolderContent = item.closest(".header-nav-folder-content");
-          const allDesktopNestedLinks = currentFolderContent.querySelectorAll(`.header-nav-folder-item a[href="${href}"]`);
-          const desktopIndex = Array.from(allDesktopNestedLinks).indexOf(desktopLink);
-
-          // Find all corresponding mobile items with the same href
-          const folderId = currentItem.parentFolder.querySelector("a").getAttribute("href");
-          const allMobileLinks = document.querySelectorAll(`[data-folder="${folderId}"] .header-menu-nav-folder-content .container.header-menu-nav-item:not(.header-menu-controls) a[href="${href}"]`);
-
-          let mobileItemEl = null;
-          if (desktopIndex !== -1 && desktopIndex < allMobileLinks.length) {
-            mobileItemEl = allMobileLinks[desktopIndex].closest(".header-menu-nav-item");
-          } else {
-            console.warn(`NestedFolders: Could not find matching mobile element index for nested desktop item "${desktopLink?.innerText?.trim()}". Desktop index: ${desktopIndex}, Mobile elements count: ${allMobileLinks.length}, Href: "${href}".`);
-          }
-
-          this.nestedFolders[currentItem.id].nestedItems.push({
-            el: item,
-            mobileEl: mobileItemEl, // Use the index-matched mobile element
-            href: href,
+        if (!hasPrefix && nextHasPrefix) {
+          // This item is a parent folder trigger
+          const uniqueId = this.generateUniqueId(itemText, folderIndex, i);
+          
+          currentParentItem = {
+            id: uniqueId,
+            item: item,
+            linkEl: item.querySelector("a"),
+            parentFolder: parentFolder,
+            nestedItems: [],
+            folderElement: null,
+          };
+          
+          this.desktopNestedFolders.push(currentParentItem);
+          
+        } else if (hasPrefix && currentParentItem) {
+          // This is a nested item - add it to current parent
+          currentParentItem.nestedItems.push({
+            element: item,
+            linkEl: item.querySelector("a"),
           });
-          itemsToRemove.push(item); // Queue for removal instead of removing immediately
+          itemsToRemove.push(item);
+        } else if (!hasPrefix && !nextHasPrefix) {
+          // Regular item, not a parent
+          currentParentItem = null;
         }
       }
+
+      // Remove nested items from original location
+      itemsToRemove.forEach(item => item.remove());
+    });
+
+    // Build all desktop nested folders after collection
+    this.desktopNestedFolders.forEach(folderData => {
+      this.buildDesktopNestedFolder(folderData);
+    });
+
+    // Add position checking on hover for each nested folder
+    this.desktopNestedFolders.forEach(folderData => {
+      const nestedFolderTrigger = folderData.item;
       
-      // Remove all queued items after processing is complete
-      itemsToRemove.forEach(itemToRemove => {
-        itemToRemove.remove();
+      nestedFolderTrigger.addEventListener("mouseenter", () => {
+        // Use requestAnimationFrame to ensure the folder is visible before checking position
+        requestAnimationFrame(() => {
+          this.checkFolderPosition(folderData);
+        });
       });
       
+      nestedFolderTrigger.addEventListener("mouseleave", () => {
+        // Reset when leaving
+        folderData.parentFolder.classList.remove("folder-side--flipped");
+        this.header.style.setProperty("--nested-folder-max-width", "initial");
+      });
     });
   }
 
-  // Helper method to find the mobile trigger element
-  findMobileTrigger(item) {
-    let mobileNestedFolderContainer = null;
-    const linkElement = item.querySelector("a");
+  /**
+   * Build the nested folder structure for desktop
+   */
+  buildDesktopNestedFolder(folderData) {
+    const trigger = folderData.item;
+    const linkEl = folderData.linkEl;
+    const parentFolder = folderData.parentFolder;
+    
+    // Mark parent folder
+    parentFolder.classList.add("wm-nested-dropdown");
+    
+    // Setup trigger item
+    trigger.classList.add("header-nav-item--nested-folder");
+    linkEl.setAttribute("aria-label", "nested folder dropdown");
+    linkEl.setAttribute("aria-controls", folderData.id);
+    linkEl.setAttribute("aria-expanded", "false");
 
-    if (!linkElement) return null;
+    // Create nested folder container
+    const nestedFolder = document.createElement("div");
+    nestedFolder.classList.add("nested-folder", "header-nav-folder-content");
+    nestedFolder.setAttribute("id", folderData.id);
 
-    const mobileElements = document.querySelectorAll(`.header-menu-nav-wrapper .container.header-menu-nav-item a[href="${linkElement.getAttribute("href")}"]`);
-
-    if (mobileElements.length === 1) {
-      mobileNestedFolderContainer = mobileElements[0].closest(".header-menu-nav-item");
-    } else if (mobileElements.length > 1) {
-      // Match by index relative to other desktop links with the same href
-      const href = linkElement.getAttribute("href");
-      const allDesktopLinksWithHref = document.querySelectorAll(`.header-display-desktop .header-nav-list a[href="${href}"]`);
-      const desktopHrefIndex = Array.from(allDesktopLinksWithHref).indexOf(linkElement);
-
-      if (desktopHrefIndex !== -1 && desktopHrefIndex < mobileElements.length) {
-        mobileNestedFolderContainer = mobileElements[desktopHrefIndex].closest(".header-menu-nav-item");
-      } else {
-        // Optional: Fallback or error handling
-        console.warn(`NestedFolders: Could not find matching mobile element index for desktop item "${linkElement?.innerText?.trim()}". Desktop index: ${desktopHrefIndex}, Mobile elements count: ${mobileElements.length}, Href: "${href}".`);
-        // Leaving mobileNestedFolderContainer as null if no match found
+    // Add nested items to folder
+    folderData.nestedItems.forEach(nestedItem => {
+      const link = nestedItem.linkEl;
+      if (link && !link.querySelector(".header-nav-folder-item-content")) {
+        link.innerHTML = `<span class="header-nav-folder-item-content">${link.innerHTML}</span>`;
       }
+      nestedFolder.appendChild(nestedItem.element);
+    });
+
+    // Append folder to trigger
+    trigger.appendChild(nestedFolder);
+    folderData.folderElement = nestedFolder;
+
+    // Handle clickthrough behavior
+    if (this.settings.linkNestedFolderOnDesktop && folderData.nestedItems.length > 0) {
+      const firstItemHref = folderData.nestedItems[0].linkEl?.getAttribute("href");
+      if (firstItemHref) {
+        linkEl.setAttribute("href", firstItemHref);
+        folderData.nestedItems[0].element.classList.add("hidden-link");
+      }
+    } else {
+      linkEl.setAttribute("rel", "nofollow");
+      linkEl.addEventListener("click", (e) => {
+        e.preventDefault();
+      });
     }
 
-    return mobileNestedFolderContainer;
+    // If first child is nested folder, mark parent button
+    if (parentFolder.querySelector(".header-nav-folder-content > .header-nav-item--nested-folder:first-child")) {
+      const parentButton = parentFolder.querySelector("button.header-nav-folder-title");
+      if (parentButton) {
+        parentButton.setAttribute("rel", "nofollow");
+      }
+    }
   }
 
+  /**
+   * Process Mobile Navigation
+   * Completely independent from desktop - processes mobile menu structure
+   */
+  processMobileFolders() {
+    const mobileFolders = document.querySelectorAll(".header-menu-nav-folder[data-folder]");
+
+    mobileFolders.forEach((mobileFolder, folderIndex) => {
+      const folderContent = mobileFolder.querySelector(".header-menu-nav-folder-content");
+      if (!folderContent) return;
+
+      // Get the folder ID from data-folder attribute
+      const folderId = mobileFolder.getAttribute("data-folder");
+      
+      // Find all items in this mobile folder (excluding controls)
+      const folderItems = Array.from(
+        folderContent.querySelectorAll(".header-menu-nav-item:not(.header-menu-controls)")
+      );
+
+      let currentParentItem = null;
+      const itemsToRemove = [];
+
+      for (let i = 0; i < folderItems.length; i++) {
+        const item = folderItems[i];
+        const itemText = item.textContent.trim();
+
+        // Check if this item has the nested prefix
+        const hasPrefix = itemText.startsWith(this.settings.nestedItemPrefix);
+        
+        // Check if next item has prefix (indicates current item is a parent)
+        const nextItem = folderItems[i + 1];
+        const nextHasPrefix = nextItem && nextItem.textContent.trim().startsWith(this.settings.nestedItemPrefix);
+
+        if (!hasPrefix && nextHasPrefix) {
+          // This item is a parent folder trigger
+          const uniqueId = this.generateUniqueId(itemText, folderIndex, i, "mobile");
+          
+          currentParentItem = {
+            id: uniqueId,
+              item: item,
+              linkEl: item.querySelector("a"),
+            folderId: folderId,
+              nestedItems: [],
+            accordionContent: null,
+          };
+          
+          this.mobileNestedFolders.push(currentParentItem);
+          
+        } else if (hasPrefix && currentParentItem) {
+          // This is a nested item - add it to current parent
+          currentParentItem.nestedItems.push({
+            element: item,
+            linkEl: item.querySelector("a"),
+          });
+          itemsToRemove.push(item);
+        } else if (!hasPrefix && !nextHasPrefix) {
+          // Regular item, not a parent
+          currentParentItem = null;
+        }
+      }
+
+      // Remove nested items from original location
+      itemsToRemove.forEach(item => item.remove());
+    });
+
+    // Build all mobile nested folders after collection
+    this.mobileNestedFolders.forEach(folderData => {
+      this.buildMobileNestedFolder(folderData);
+    });
+  }
+
+  /**
+   * Build the accordion structure for mobile
+   */
+  buildMobileNestedFolder(folderData) {
+    const trigger = folderData.item;
+    const linkEl = folderData.linkEl;
+    
+    // Mark as accordion folder
+    trigger.classList.add("header-menu-nav-item--accordion-folder");
+    
+    // Add icon to link
+    if (linkEl && !linkEl.querySelector(".icon")) {
+      linkEl.innerHTML += `<span class="icon">${this.settings.mobileIcon}</span>`;
+    }
+
+    // Create accordion content
+    const accordionContent = document.createElement("div");
+    accordionContent.classList.add("accordion-folder-content");
+    
+    const accordionWrapper = document.createElement("div");
+    accordionWrapper.classList.add("accordion-folder-wrapper");
+    
+    // Add nested items to accordion
+    folderData.nestedItems.forEach(nestedItem => {
+      accordionWrapper.appendChild(nestedItem.element);
+    });
+
+    accordionContent.appendChild(accordionWrapper);
+    trigger.appendChild(accordionContent);
+    folderData.accordionContent = accordionContent;
+
+    // Setup click handler for accordion
+    if (linkEl) {
+      linkEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const isOpen = accordionContent.style.maxHeight;
+        
+        if (isOpen) {
+          linkEl.classList.remove("open");
+          accordionContent.style.maxHeight = null;
+      } else {
+          linkEl.classList.add("open");
+          accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+        }
+      });
+    }
+  }
+
+  /**
+   * Check if a specific desktop folder is positioned off-screen and adjust
+   */
+  checkFolderPosition(folderData) {
+    if (!folderData.folderElement) return;
+
+    // Reset first
+    folderData.parentFolder.classList.remove("folder-side--flipped");
+    this.header.style.setProperty("--nested-folder-max-width", "initial");
+
+    // Wait a tick to ensure the folder is visible and rendered
+    const rightEdge = window.innerWidth - window.innerWidth * 0.03;
+    const folderRect = folderData.folderElement.getBoundingClientRect();
+    const folderRight = folderRect.right;
+
+    if (rightEdge < folderRight) {
+      // Folder is off the right edge - flip it
+      folderData.parentFolder.classList.add("folder-side--flipped");
+
+      // Check position again after flipping
+      requestAnimationFrame(() => {
+        const flippedRect = folderData.folderElement.getBoundingClientRect();
+        const folderLeft = flippedRect.left;
+        const leftEdge = window.innerWidth * 0.03;
+        
+        if (folderLeft < leftEdge) {
+          // Also off the left edge after flipping - shrink it
+          const shrinkBy = leftEdge - folderLeft;
+          this.header.style.setProperty("--nested-folder-max-width", `calc(100% - ${shrinkBy}px)`);
+        }
+      });
+    }
+  }
+
+  /**
+   * Generate a unique ID for folders
+   */
+  generateUniqueId(text, folderIndex, itemIndex, prefix = "desktop") {
+    const cleanText = text
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+    
+    return `${prefix}-nested-folder-${folderIndex}-${itemIndex}-${cleanText}`;
+  }
+
+  /**
+   * Remove the prefix (--) from nested item text
+   */
+  removeDashPrefix() {
+    const elements = document.querySelectorAll(
+      ".header-nav-item--nested-folder a, .header-menu-nav-item--accordion-folder a"
+    );
+
+    elements.forEach(element => {
+      const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+
+      let node;
+      while ((node = walker.nextNode())) {
+        const text = node.nodeValue.trim();
+        if (text.startsWith(this.settings.nestedItemPrefix)) {
+          const newText = text.substring(this.settings.nestedItemPrefix.length).trim();
+          node.nodeValue = text.replace(text.trim(), newText);
+        }
+      }
+    });
+  }
+
+  /**
+   * Set active navigation item classes based on current URL
+   */
   setActiveNavItem() {
-    const links = document.querySelectorAll("#header .header-menu-nav-folder-content a:not([data-action]), #header .header-nav a:not([data-action])");
+    const links = document.querySelectorAll(
+      "#header .header-menu-nav-folder-content a:not([data-action]), #header .header-nav a:not([data-action])"
+    );
+
+    const currentPath = window.location.pathname;
 
     links.forEach(link => {
-      if (window.location.pathname === link.getAttribute("href")) {
-        /* Desktop Nav Folder Level 1 */
-        const desktopNestedFolderItem = link.closest(".wm-nested-dropdown");
-        if (desktopNestedFolderItem) {
-          desktopNestedFolderItem.classList.add("header-nav-item--active");
+      const linkHref = link.getAttribute("href");
+      
+      if (currentPath === linkHref) {
+        // Desktop: Mark parent folder
+        const desktopParentFolder = link.closest(".wm-nested-dropdown");
+        if (desktopParentFolder) {
+          desktopParentFolder.classList.add("header-nav-item--active");
         }
 
-        /* Desktop Nav Folder Level 2 */
+        // Desktop: Mark nested folder item (level 2)
         const desktopNestedFolder = link.closest(".header-nav-item--nested-folder");
         if (desktopNestedFolder) {
           desktopNestedFolder.classList.add("header-nested-nav-folder-item--active");
         }
 
-        /* Desktop Nav Folder Level 3 */
+        // Desktop: Mark nested link (level 3)
         const desktopNestedLink = link.closest(".nested-folder .header-nav-folder-item");
         if (desktopNestedLink) {
           desktopNestedLink.classList.add("header-nav-folder-item--active");
         }
 
-        /* Mobile Nav Item */
-        const headerMenuNavItem = link.closest(".header-menu-nav-item");
-        if (headerMenuNavItem) {
-          headerMenuNavItem.classList.add("header-menu-nav-item--active");
+        // Mobile: Mark nav item
+        const mobileNavItem = link.closest(".header-menu-nav-item");
+        if (mobileNavItem) {
+          mobileNavItem.classList.add("header-menu-nav-item--active");
         }
 
-        /* Mobile Nav Folder */
-        const mobileLink = link.closest("[data-folder]");
-        if (mobileLink) {
-          const href = mobileLink.dataset.folder;
-          const navLink = document.querySelector(`.header-menu-nav-item a[data-folder-id="${href}"]`);
-          navLink?.parentElement.classList.add("header-menu-nav-item--active");
+        // Mobile: Mark parent folder
+        const mobileFolder = link.closest("[data-folder]");
+        if (mobileFolder) {
+          const folderId = mobileFolder.dataset.folder;
+          const folderTrigger = document.querySelector(
+            `.header-menu-nav-item a[data-folder-id="${folderId}"]`
+          );
+          if (folderTrigger) {
+            folderTrigger.closest(".header-menu-nav-item")?.classList.add("header-menu-nav-item--active");
+          }
         }
 
+        // Set aria-current
         link.setAttribute("aria-current", "page");
       }
     });
   }
 
-  removeDash() {
-    document.querySelectorAll(".header-nav-item--nested-folder a, .header-menu-nav-item--accordion-folder a").forEach(item => {
-      // Find all text nodes within the element
-      const walkNode = document.createTreeWalker(item, NodeFilter.SHOW_TEXT, null, false);
-      let node;
-
-      while ((node = walkNode.nextNode())) {
-        let text = node.nodeValue.trim();
-        if (text.startsWith(this.settings.nestedItemPrefix)) {
-          text = text.substring(this.settings.nestedItemPrefix.length).trim();
-          node.nodeValue = text;
-        }
-      }
-    });
-  }
-
-  buildDesktopFolders() {
-    function createFolderText(text) {
-      //all lowercase, no spaces, no special characters, yes dashes instead of spaces
-      return text.toLowerCase().replace(/[^a-z0-9]/g, "-");
-    }
-
-    let nestedFolderShouldClickthrough = this.settings.linkNestedFolderOnDesktop;
-
-    for (let item in this.nestedFolders) {
-      let data = this.nestedFolders[item];
-      let trigger = data.item;
-      const linkEl = data.item.querySelector("a");
-      let parentFolder = data.parentFolder;
-      parentFolder.classList.add("wm-nested-dropdown");
-
-      /*Create Desktop Folder*/
-      trigger.classList.add("header-nav-item--nested-folder");
-      linkEl.setAttribute("aria-label", "nested folder dropdown");
-      linkEl.setAttribute("aria-controls", "nested-folder-" + createFolderText(data.item.textContent.trim()));
-      linkEl.setAttribute("aria-expanded", "false");
-
-      let nestedFolder = document.createElement("div");
-      nestedFolder.classList.add("nested-folder", "header-nav-folder-content");
-      nestedFolder.setAttribute("id", "nested-folder-" + createFolderText(data.item.textContent.trim()));
-
-      /*Adding Links To Folders*/
-      data.nestedItems.forEach(link => {
-        link.el.querySelector("a").innerHTML = '<span class="header-nav-folder-item-content">' + link.el.querySelector("a").innerHTML + "</span>";
-        nestedFolder.append(link.el);
-      });
-
-      trigger.append(nestedFolder);
-      data.folder = nestedFolder;
-
-      //Parent Folder
-      if (parentFolder.querySelector(".header-nav-folder-content > .header-nav-item--nested-folder:first-child")) {
-        parentFolder.querySelector("a").setAttribute("rel", "nofollow");
-      }
-
-      /*Should DesktopFolder Clickthrough?*/
-      if (nestedFolderShouldClickthrough) {
-        let newUrl = data.nestedItems[0].href;
-        data.nestedItems[0].el.classList.add("hidden-link");
-        trigger.querySelector("a").setAttribute("href", newUrl);
-      } else {
-        trigger.querySelector("a").setAttribute("rel", "nofollow");
-        trigger.querySelector("a").addEventListener("click", e => {
-          e.preventDefault();
-        });
-      }
-    }
-  }
-
-  buildMobileFolders() {
-    let nestedFolderShouldClickthrough = this.settings.linkNestedFolderOnDesktop;
-
-    for (let item in this.nestedFolders) {
-      let data = this.nestedFolders[item];
-      let mobileTrigger = data.mobileTrigger;
-
-      /*Create Mobile Folder*/
-      mobileTrigger.classList.add("header-menu-nav-item--accordion-folder");
-      let mobileAccordionContent = document.createElement("div");
-      mobileTrigger.querySelector("a").innerHTML += `<span class="icon">${this.settings.mobileIcon}</span>`;
-      mobileAccordionContent.classList.add("accordion-folder-content");
-      mobileAccordionContent.innerHTML = '<div class="accordion-folder-wrapper"></div>';
-      let mobileAccordionWrapper = mobileAccordionContent.querySelector(".accordion-folder-wrapper");
-
-      data.mobileItemsContainer = mobileAccordionContent;
-
-      /*Adding Links To Folders*/
-      data.nestedItems.forEach(link => {
-        mobileAccordionWrapper.append(link.mobileEl);
-        link.mobileEl.innerHTML = link.mobileEl.innerHTML;
-      });
-
-      /*Add Mobile Folder*/
-      mobileTrigger.append(mobileAccordionContent);
-    }
-
-    for (let id in this.nestedFolders) {
-      let item = this.nestedFolders[id];
-      let mobileTrigger = item.mobileTrigger.querySelector("a");
-      let mobileItemsContainer = item.mobileItemsContainer;
-      mobileTrigger.addEventListener("click", function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        if (mobileItemsContainer.style.maxHeight) {
-          mobileTrigger.classList.remove("open");
-          mobileItemsContainer.style.maxHeight = null;
-        } else {
-          mobileTrigger.classList.add("open");
-          mobileItemsContainer.style.maxHeight = mobileItemsContainer.scrollHeight + "px";
-        }
-      });
-    }
-  }
-
+  /**
+   * Add keyboard accessibility for nested folders
+   */
   addAccessibility() {
     let isUsingKeyboard = false;
 
-    document.addEventListener("keydown", e => {
+    document.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         isUsingKeyboard = true;
       }
@@ -355,16 +436,45 @@ class NestedFolders {
 
     document.addEventListener(
       "focus",
-      event => {
-        for (let item in this.nestedFolders) {
-          let data = this.nestedFolders[item];
-          data.item.querySelector("a").setAttribute("aria-expanded", "false");
-        }
+      (event) => {
+        // Reset all aria-expanded
+        this.desktopNestedFolders.forEach(folderData => {
+          if (folderData.linkEl) {
+            folderData.linkEl.setAttribute("aria-expanded", "false");
+          }
+        });
+
         if (!isUsingKeyboard) return;
-        let target = event.target;
-        let closestFolder = target.closest(".header-nav-item--nested-folder");
-        if (closestFolder || target.getAttribute("aria-label") === "nested folder dropdown") {
-          closestFolder.querySelector("a").setAttribute("aria-expanded", "true");
+
+        const target = event.target;
+        const closestFolder = target.closest(".header-nav-item--nested-folder");
+        
+        if (closestFolder) {
+          const folderLink = closestFolder.querySelector("a");
+          if (folderLink) {
+            folderLink.setAttribute("aria-expanded", "true");
+            
+            // Check folder position for keyboard navigation
+            const folderData = this.desktopNestedFolders.find(data => data.item === closestFolder);
+            if (folderData) {
+              requestAnimationFrame(() => {
+                this.checkFolderPosition(folderData);
+              });
+            }
+          }
+        } else if (target.getAttribute("aria-label") === "nested folder dropdown") {
+          target.setAttribute("aria-expanded", "true");
+          
+          // Check folder position for keyboard navigation
+          const closestNestedFolder = target.closest(".header-nav-item--nested-folder");
+          if (closestNestedFolder) {
+            const folderData = this.desktopNestedFolders.find(data => data.item === closestNestedFolder);
+            if (folderData) {
+              requestAnimationFrame(() => {
+                this.checkFolderPosition(folderData);
+              });
+            }
+          }
         }
       },
       true
@@ -372,11 +482,13 @@ class NestedFolders {
   }
 }
 
+// Initialize
 (function () {
   function deepMerge(...objs) {
     function getType(obj) {
       return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
     }
+    
     function mergeObj(clone, obj) {
       for (let [key, value] of Object.entries(obj)) {
         let type = getType(value);
@@ -387,6 +499,7 @@ class NestedFolders {
         }
       }
     }
+    
     let clone = structuredClone(objs.shift());
     for (let obj of objs) {
       let type = getType(obj);
@@ -405,18 +518,18 @@ class NestedFolders {
 
     return clone;
   }
-  const userSettings = window.wmNestedFolderSettings ? window.wmNestedFolderSettings : {};
-  const settings = {
+
+  const userSettings = window.wmNestedFolderSettings || {};
+  const defaultSettings = {
     installation: "dashes",
     nestedItemPrefix: "--",
     linkNestedFolderOnDesktop: false,
     mobileIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>`,
-    mobileCategoryPrepend: "",
-    mobileCategoryAppend: "",
-    reformatHeaderLinks: false,
   };
-  const mergedSettings = deepMerge({}, settings, userSettings);
+
+  const mergedSettings = deepMerge({}, defaultSettings, userSettings);
   const wmNestedFolders = new NestedFolders(mergedSettings);
+  
   window.wmNestedFolders = wmNestedFolders;
   document.body.classList.add("wm-nested-folders-loaded");
 })();
