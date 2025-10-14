@@ -16,6 +16,11 @@
   --mobile-nested-folder-icon-size: 25px;
 }*/
 
+/* ====================================
+   DESKTOP NESTED FOLDERS
+   ==================================== */
+
+/* Nested folder container */
 #header .header-nav .nested-folder.header-nav-folder-content {
   pointer-events: none;
   position: absolute;
@@ -28,161 +33,197 @@
   width: 100%;
   box-sizing: border-box;
   visibility: hidden;
-  opacity:0;
+  opacity: 0;
   z-index: -1000;
 }
+
+/* Show nested folder on hover or keyboard focus */
 #header .header-nav .header-nav-item--nested-folder:hover .nested-folder,
-#header .header-nav .header-nav-item--nested-folder > a[aria-expanded="true"] + .nested-folder{
+#header .header-nav .header-nav-item--nested-folder > a[aria-expanded="true"] + .nested-folder {
   display: block;
   pointer-events: auto;
   opacity: 1;
   visibility: visible;
   z-index: 10;
 }
-#header  .header-nav .header-nav-item--nested-folder{
-  position: relative;
 
+/* Nested folder trigger item */
+#header .header-nav .header-nav-item--nested-folder {
+  position: relative;
 }
+
+/* Position for right-aligned nav */
 #header .header-layout-nav-right .header-nav .header-nav-item--folder .nested-folder.header-nav-folder-content {
   left: 100%;
 }
+
+/* Flipped folders (when off right edge) */
 #header .header-nav .header-nav-item--folder.folder-side--flipped .nested-folder.header-nav-folder-content {
   right: 100%;
   left: initial;
 }
 
-/*All Desktop Folders*/
+/* All Desktop Folders (including nested) */
 #header .header-nav-folder-content {
   padding: 0.5em 0em;
   box-shadow: var(--folder-shadow-offset-x, 2px) 
     var(--folder-shadow-offset-y, 2px)
     var(--folder-shadow-blur, 0px)
     var(--folder-shadow-spread, 0px)
-    hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%))
-  ;
+    hsla(0, 0%, 0%, var(--folder-shadow-opacity, 0%));
   border: var(--folder-border-thickness, 1px) 
     var(--folder-border-style, solid) 
-    var(--folder-border-color, var(--navigationLinkColor, currentColor))
-  ;
+    var(--folder-border-color, var(--navigationLinkColor, currentColor));
 }
 
-
-
-/*All Desktop Folder Items*/
-#header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item{
+/* All Desktop Folder Items */
+#header .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item {
   padding: 0 1em;
 }
 
-/*Mobile Folder*/
-.header-menu-nav-item--accordion-folder {
-  overflow: hidden; /* Ensure content doesn't overflow */
+/* Hidden link (when clickthrough is enabled) */
+.nested-folder .hidden-link {
+  display: none;
 }
+
+/* ====================================
+   MOBILE NESTED FOLDERS (ACCORDION)
+   ==================================== */
+
+/* Mobile accordion folder container */
+.header-menu-nav-item--accordion-folder {
+  overflow: hidden;
+}
+
+/* Mobile folder trigger link */
 .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
   display: flex;
   gap: var(--mobile-nested-folder-gap, 8px);
   justify-content: var(--mobile-nested-folder-alignment, space-between);
   align-items: center;
-}
-/*Mobile Alignment -- RIGHT*/
-.header-overlay-alignment-right .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
-  justify-content: var(--mobile-nested-folder-alignment, end);
-}
-.header-overlay-alignment-right .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
-  padding-right: calc(var(--mobile-nested-folder-icon-size, 25px) + var(--mobile-nested-folder-gap, 8px) + var(--mobile-nested-item-inset, 12px));
+  transition: background-color 0.3s ease;
 }
 
-
-/*Mobile Alignment -- CENTER*/
-.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
-  justify-content: var(--mobile-nested-folder-alignment, center);
-}
-.header-overlay-alignment-center .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
-  padding-right: 2vw;
-  padding-left: 2vw;
-}
-
-/*Mobile Alignment -- LEFT*/
-.header-overlay-alignment-left .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a{
-  justify-content: var(--mobile-nested-folder-alignment, space-between);
-}
-.header-overlay-alignment-left .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
-  padding-left: var(--mobile-nested-item-inset, 12px);
-}
-
+/* Mobile accordion icon */
 .header-menu-nav-item--accordion-folder > a .icon {
   display: grid;
   place-items: center;
   transition: transform 0.3s ease;
   width: var(--mobile-nested-folder-icon-size, 25px);
   height: var(--mobile-nested-folder-icon-size, 25px);
+  flex-shrink: 0;
 }
-.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder > a .icon {
-  position:absolute;
-  right: 0;
-}
+
+/* Rotate icon when open */
 .header-menu-nav-item--accordion-folder > a.open .icon {
   transform: var(--mobile-nested-folder-icon-transform, rotate(45deg));
 }
-.header-menu-nav-item--accordion-folder.header-menu-nav-item a {
-  transition: background-color 0.3s ease; 
-}
 
+/* Mobile accordion content */
 .header-menu-nav-item--accordion-folder .accordion-folder-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease; 
+  transition: max-height 0.3s ease;
 }
-.nested-folder .hidden-link{
-  display: none;
-}
-.header-menu-nav-item--accordion-folder .accordion-folder-wrapper{
+
+/* Mobile accordion wrapper */
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper {
   padding-bottom: var(--mobile-nested-folder-padding-bottom, 1rem);
   padding-top: var(--mobile-nested-folder-padding-top, 0.5rem);
 }
-.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item a{
+
+/* Mobile nested item spacing */
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item a {
   margin-top: var(--mobile-nested-item-spacing, 2vw);
   margin-bottom: var(--mobile-nested-item-spacing, 2vw);
 }
-.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:first-child a{
+
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:first-child a {
   margin-top: 0px;
 }
-.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:last-child a{
+
+.header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item:last-child a {
   margin-bottom: 0px;
 }
 
-/*Mobile Nested Folder Items*/
+/* Mobile nested item font size */
 .accordion-folder-content .header-menu-nav-item a {
   font-size: var(--mobile-nested-item-size, 7.5vmin);
 }
+
 @media screen and (min-width: 576px) {
   .accordion-folder-content .header-menu-nav-item a {
     font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 1vmin);
   }
 }
+
 @media screen and (min-width: 768px) {
   .accordion-folder-content .header-menu-nav-item a {
     font-size: calc(var(--mobile-nested-item-size, 7.5vmin) - 2vmin);
   }
 }
 
-/*Active Link Styles*/
-body:not(.header--menu-open) .header-nested-nav-folder-item--active > a{
-  /*Level 2*/
-  display:inline-block;
-  background-image: linear-gradient(currentColor,currentColor);
+/* ====================================
+   MOBILE ALIGNMENT VARIATIONS
+   ==================================== */
+
+/* Right Alignment */
+.header-overlay-alignment-right .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, end);
+}
+
+.header-overlay-alignment-right .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: calc(var(--mobile-nested-folder-icon-size, 25px) + var(--mobile-nested-folder-gap, 8px) + var(--mobile-nested-item-inset, 12px));
+}
+
+/* Center Alignment */
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, center);
+}
+
+.header-overlay-alignment-center .header-menu .header-menu-nav-item--accordion-folder > a .icon {
+  position: absolute;
+  right: 0;
+}
+
+.header-overlay-alignment-center .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-right: 2vw;
+  padding-left: 2vw;
+}
+
+/* Left Alignment */
+.header-overlay-alignment-left .header-menu .header-menu-nav-item--accordion-folder.header-menu-nav-item > a {
+  justify-content: var(--mobile-nested-folder-alignment, space-between);
+}
+
+.header-overlay-alignment-left .header-menu-nav-item--accordion-folder .accordion-folder-wrapper .header-menu-nav-item {
+  padding-left: var(--mobile-nested-item-inset, 12px);
+}
+
+/* ====================================
+   ACTIVE LINK STYLES
+   ==================================== */
+
+/* Desktop nested folder item active (Level 2) */
+body:not(.header--menu-open) .header-nested-nav-folder-item--active > a {
+  display: inline-block;
+  background-image: linear-gradient(currentColor, currentColor);
   background-repeat: repeat-x;
   background-size: 1px 1px;
   background-position: 0 calc(100% - 2px);
 }
-:not(.header--menu-open) .header-nav-wrapper .header-nav-item--active a span{
-  /*Level 3*/
-  display:inline-block;
-}
 
-.header-menu-nav-item{
+/* Desktop active link span (Level 3) */
+:not(.header--menu-open) .header-nav-wrapper .header-nav-item--active a span {
   display: inline-block;
 }
 
+/* Mobile menu nav item display */
+.header-menu-nav-item {
+  display: inline-block;
+}
+
+/* Mobile and nested active link underlines */
 .header-menu-nav-item--active > a[data-folder-id] .header-menu-nav-item-content span:not(.chevron),
 .header-menu-nav-item--accordion-folder:has([aria-current="page"]) > a,
 .header-menu-nav-item--active a {
